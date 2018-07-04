@@ -26,14 +26,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) {
         UserEntity userEntity = userService.findByEmail(email);
-
-        if (userEntity != null) {
-            SimpleGrantedAuthority role = new SimpleGrantedAuthority("ROLE_USER");
-            List<GrantedAuthority> authorities = Collections.singletonList(role);
-
-            return new User(email, userEntity.getPassword(), authorities);
-        } else {
+        if (userEntity == null) {
             throw new UsernameNotFoundException(email);
         }
+
+        SimpleGrantedAuthority role = new SimpleGrantedAuthority("ROLE_USER");
+        List<GrantedAuthority> authorities = Collections.singletonList(role);
+
+        return new User(email, userEntity.getPassword(), authorities);
     }
 }

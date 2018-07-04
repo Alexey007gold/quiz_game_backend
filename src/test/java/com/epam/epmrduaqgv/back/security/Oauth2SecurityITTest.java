@@ -21,7 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@Sql(value = "classpath:sql/add_user.sql")
 @Transactional
 public class Oauth2SecurityITTest {
 
@@ -41,6 +40,17 @@ public class Oauth2SecurityITTest {
     }
 
     @Test
+    public void healthEndpointIsAccessibleWithoutAuthentication() throws Exception {
+        String result = mockMvc.perform(get("/health"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        //check the response can be parsed as a date
+        LocalDateTime.parse(result.replace("\"", ""));
+    }
+
+    @Test
+    @Sql(value = "classpath:sql/add_user.sql")
     public void securedHealthEndpointIsAccessibleForAuthenticatedUser() throws Exception {
         final String accessToken = AuthenticationHelper.obtainAccessToken(mockMvc, EMAIL, PASSWORD);
 
