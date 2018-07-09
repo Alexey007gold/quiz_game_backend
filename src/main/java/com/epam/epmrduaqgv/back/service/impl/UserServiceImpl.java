@@ -42,6 +42,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEntity registerUser(SignUpForm form) {
+        checkAvailability(form);
+
+        String encodedPassword = passwordEncoder.encode(form.getPassword());
+        UserEntity userEntity = UserEntity.builder()
+                .email(form.getEmail())
+                .password(encodedPassword)
+                .nickName(form.getNickName())
+                .build();
+        return userRepository.save(userEntity);
+    }
+
+    private void checkAvailability(SignUpForm form) {
         UserEntity userEntity = userRepository.findByEmailOrNickName(form.getEmail(), form.getNickName());
         if (userEntity != null) {
             if (userEntity.getEmail().equals(form.getEmail())) {
@@ -52,13 +64,5 @@ public class UserServiceImpl implements UserService {
             }
             throw new IllegalStateException(NICK_NAME_USED_MESSAGE);
         }
-
-        String encodedPassword = passwordEncoder.encode(form.getPassword());
-        userEntity = UserEntity.builder()
-                .email(form.getEmail())
-                .password(encodedPassword)
-                .nickName(form.getNickName())
-                .build();
-        return userRepository.save(userEntity);
     }
 }
