@@ -6,15 +6,15 @@
 
     <changeSet id="20180703163958" author="Oleksii Kovetskyi">
         <createTable schemaName="${schema.name}" tableName="users">
-            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}"/>
-            <column name="email" type="varchar(256)">
-                <constraints nullable="false"/>
+            <column name="id" type="varchar(36)" defaultValueComputed="${uuid_function}"/>
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
             </column>
-            <column name="password" type="varchar(256)">
+            <column name="password" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="nick_name" type="varchar(56)">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="score" type="int">
                 <constraints nullable="false"/>
