@@ -38,6 +38,7 @@ public class PasswordValidatorTest {
         assertFalse(passwordValidator.isValid("password", null));//No uppercase letters
         assertFalse(passwordValidator.isValid("PassWord", null));//no digits
         assertFalse(passwordValidator.isValid("p@ssw0rd", null));//no uppercase letters
+        assertFalse(passwordValidator.isValid("P@SSW0RD", null));//no lowercase letters
     }
 
     @Test
