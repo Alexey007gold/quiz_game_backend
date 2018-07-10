@@ -18,7 +18,7 @@ public class OAuth2ResourceServerConfigJwt extends ResourceServerConfigurerAdapt
     @Override
     public void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/health").permitAll()
+                .antMatchers("/health", "/register").permitAll()
                 .anyRequest().authenticated();
     }
 
