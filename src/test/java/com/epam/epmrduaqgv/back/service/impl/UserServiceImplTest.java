@@ -9,6 +9,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import java.util.Collections;
+import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.Assert.assertEquals;
@@ -42,6 +48,24 @@ public class UserServiceImplTest {
     }
 
     @Test
+    public void shouldDelegateToRepositoryOnFindTopScoresUserList() {
+        UserEntity userEntity = getUserEntity();
+        PageImpl<UserEntity> page = new PageImpl<>(Collections.singletonList(userEntity));
+        when(userRepository.findAll(any(Pageable.class))).thenReturn(page);
+
+        List<UserEntity> result = userService.findTopScoresUserList(6, Sort.Direction.DESC);
+
+
+        ArgumentCaptor<Pageable> argumentCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(userRepository).findAll(argumentCaptor.capture());
+        Pageable capturedArg = argumentCaptor.getValue();
+
+        assertEquals(0, capturedArg.getPageNumber());
+        assertEquals(6, capturedArg.getPageSize());
+        assertEquals(Sort.Direction.DESC, capturedArg.getSort().getOrderFor("score").getDirection());
+        assertEquals(userEntity, result.get(0));
+    }
+    
     public void shouldDelegateToRepositoryOnFindByNickName() {
         UserEntity userEntity = getUserEntity();
         when(userRepository.findByNickName(NICK)).thenReturn(userEntity);
