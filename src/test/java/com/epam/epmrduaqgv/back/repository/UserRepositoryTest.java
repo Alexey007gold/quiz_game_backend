@@ -7,13 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.junit4.SpringRunner;
+
 
 @DataJpaTest
 @RunWith(SpringRunner.class)
@@ -49,5 +51,16 @@ public class UserRepositoryTest {
         for (int i = 0; i < result2.size() - 1; i++) {
             assertTrue(result2.get(i).getScore() <= result2.get(i + 1).getScore());
         }
+    }
+    
+    @Sql("classpath:sql/add_users.sql")
+    public void shouldReturnCorrectEntityOnFindByEmailOrNickName() {
+        UserEntity result1 = userRepository.findByEmailOrNickName("test2@gmail.com", "not_existent_nick");
+        UserEntity result2 = userRepository.findByEmailOrNickName("not_existent_email", "test_user3");
+        UserEntity result3 = userRepository.findByEmailOrNickName("not_existent_email", "not_existent_nick");
+
+        assertNotNull(result1);
+        assertNotNull(result2);
+        assertNull(result3);
     }
 }

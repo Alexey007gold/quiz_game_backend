@@ -1,6 +1,7 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
 import com.epam.epmrduaqgv.back.entity.UserEntity;
+import com.epam.epmrduaqgv.back.form.SignUpForm;
 import com.epam.epmrduaqgv.back.repository.UserRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.Collections;
 import java.util.List;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +32,9 @@ public class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @Test
     public void shouldDelegateToRepositoryOnFindByEmail() {
@@ -59,6 +64,68 @@ public class UserServiceImplTest {
         assertEquals(6, capturedArg.getPageSize());
         assertEquals(Sort.Direction.DESC, capturedArg.getSort().getOrderFor("score").getDirection());
         assertEquals(userEntity, result.get(0));
+    }
+    
+    public void shouldDelegateToRepositoryOnFindByNickName() {
+        UserEntity userEntity = getUserEntity();
+        when(userRepository.findByNickName(NICK)).thenReturn(userEntity);
+
+        UserEntity result = userService.findByNickName(NICK);
+
+        verify(userRepository).findByNickName(NICK);
+        assertEquals(userEntity, result);
+    }
+
+    @Test
+    public void shouldDelegateToRepositoryOnFindByEmailOrNickName() {
+        UserEntity userEntity = getUserEntity();
+        when(userRepository.findByEmailOrNickName(EMAIL, NICK)).thenReturn(userEntity);
+
+        UserEntity result = userService.findByEmailOrNickName(EMAIL, NICK);
+
+        verify(userRepository).findByEmailOrNickName(EMAIL, NICK);
+        assertEquals(userEntity, result);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowAnExceptionWhenEmailOrNickNameIsUsedOnRegisterUser() {
+        when(userRepository.findByEmailOrNickName(EMAIL, NICK)).thenReturn(getUserEntity());
+
+        SignUpForm form = getSignUpForm();
+        userService.registerUser(form);
+    }
+
+    @Test
+    public void shouldEncodePasswordAndSaveNewUserOnRegisterUser() {
+        String encodedPass = "encodedPass";
+        UserEntity userEntity = getUserEntity();
+        SignUpForm form = getSignUpForm();
+        when(passwordEncoder.encode(form.getPassword())).thenReturn(encodedPass);
+        when(userRepository.save(any())).thenReturn(userEntity);
+
+        UserEntity result = userService.registerUser(form);
+
+        ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<UserEntity> userEntityCaptor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(passwordEncoder).encode(passwordCaptor.capture());
+        verify(userRepository).save(userEntityCaptor.capture());
+        UserEntity capturedEntity = userEntityCaptor.getValue();
+        String capturedPassword = passwordCaptor.getValue();
+
+        assertEquals(form.getPassword(), capturedPassword);
+        assertEquals(form.getEmail(), capturedEntity.getEmail());
+        assertEquals(encodedPass, capturedEntity.getPassword());
+        assertEquals(form.getNickName(), capturedEntity.getNickName());
+
+        assertEquals(userEntity, result);
+    }
+
+    private SignUpForm getSignUpForm() {
+        return SignUpForm.builder()
+                .email(EMAIL)
+                .nickName(NICK)
+                .password("pass")
+                .build();
     }
 
     private UserEntity getUserEntity() {

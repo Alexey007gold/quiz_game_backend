@@ -31,5 +31,6 @@ public class UserEntity {
     private String nickName;
 
     @Column(name = "score", nullable = false)
-    private Long score;
+    @Builder.Default
+    private Long score = 0L;
 }
