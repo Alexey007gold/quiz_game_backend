@@ -3,6 +3,8 @@ package com.epam.epmrduaqgv.back.controller;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.UserDTO;
 import com.epam.epmrduaqgv.back.service.UserService;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -17,6 +19,7 @@ public class ScoresController {
     private UserService userService;
 
     @GetMapping("/scores")
+    @ApiOperation(value = "Get scores data either by topic or total", authorizations = @Authorization(value = "oauth2"))
     public PageDTO<UserDTO> getHighScores(@RequestParam(value = "topicId", required = false) String topicId,
                                           @RequestParam(value = "topicName", required = false) String topicName,
                                           @RequestParam(value = "page", defaultValue = "0") int page,
