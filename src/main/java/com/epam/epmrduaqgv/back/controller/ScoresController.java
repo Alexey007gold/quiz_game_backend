@@ -1,17 +1,14 @@
 package com.epam.epmrduaqgv.back.controller;
 
+import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.UserDTO;
-import com.epam.epmrduaqgv.back.entity.UserEntity;
 import com.epam.epmrduaqgv.back.service.UserService;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 public class ScoresController {
@@ -19,13 +16,24 @@ public class ScoresController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @GetMapping("/scores")
-    public List<UserDTO> getHighScores(@RequestParam(value = "top", defaultValue = "10") int top,
-                   @RequestParam(value = "order", defaultValue = "DESC") Sort.Direction order) {
-        List<UserEntity> topScores = userService.findTopScoresUserList(top, order);
-        return objectMapper.convertValue(topScores, new TypeReference<List<UserDTO>>() {});
+    public PageDTO<UserDTO> getHighScores(@RequestParam(value = "topicId", required = false) String topicId,
+                                          @RequestParam(value = "topicName", required = false) String topicName,
+                                          @RequestParam(value = "page", defaultValue = "0") int page,
+                                          @RequestParam(value = "pageSize", defaultValue = "30") int pageSize,
+                                          @RequestParam(value = "order", defaultValue = "DESC") Sort.Direction order) {
+        if (topicId != null && topicName != null) {
+            throw new IllegalArgumentException("topicId and topicName should not be set at the same time");
+        }
+
+        Page<UserDTO> topScores;
+        if (topicId != null) {
+            topScores = userService.findScoresByTopicId(topicId, page, pageSize, order);
+        } else if (topicName != null) {
+            topScores = userService.findScoresByTopicName(topicName, page, pageSize, order);
+        } else {
+            topScores = userService.findTotalScores(page, pageSize, order);
+        }
+        return PageDTO.of(topScores);
     }
 }

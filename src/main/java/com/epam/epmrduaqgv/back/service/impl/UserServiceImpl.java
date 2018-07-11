@@ -1,25 +1,30 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
+import com.epam.epmrduaqgv.back.dto.UserDTO;
 import com.epam.epmrduaqgv.back.entity.UserEntity;
 import com.epam.epmrduaqgv.back.form.SignUpForm;
 import com.epam.epmrduaqgv.back.repository.UserRepository;
 import com.epam.epmrduaqgv.back.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @PropertySource("classpath:validation/validationMessages.properties")
 public class UserServiceImpl implements UserService {
 
+    private static final String SCORE_FIELD = "COALESCE(s.score, 0)";
+    private static final String SUM_SCORE_FIELD = "SUM(COALESCE(s.score, 0))";
+
     @Value("${validation.message.user.email.unavailable}")
     private String EMAIL_USED_MESSAGE;
+
     @Value("${validation.message.user.nick_name.unavailable}")
     private String NICK_NAME_USED_MESSAGE;
 
@@ -35,9 +40,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserEntity> findTopScoresUserList(int top, Sort.Direction order) {
-        return userRepository.findAll(PageRequest.of(0, top, order, "score"))
-                .getContent();
+    public Page<UserDTO> findTotalScores(int page, int pageSize, Sort.Direction order) {
+        JpaSort jpaSort = JpaSort.unsafe(order, SUM_SCORE_FIELD);
+        return userRepository.findTotalScores(PageRequest.of(page, pageSize, jpaSort));
+    }
+
+    @Override
+    public Page<UserDTO> findScoresByTopicId(String topicId, int page, int pageSize, Sort.Direction order) {
+        JpaSort jpaSort = JpaSort.unsafe(order, SCORE_FIELD);
+        return userRepository.findScoresByTopicId(topicId, PageRequest.of(page, pageSize, jpaSort));
+    }
+
+    @Override
+    public Page<UserDTO> findScoresByTopicName(String topicName, int page, int pageSize, Sort.Direction order) {
+        JpaSort jpaSort = JpaSort.unsafe(order, SCORE_FIELD);
+        return userRepository.findScoresByTopicName(topicName, PageRequest.of(page, pageSize, jpaSort));
     }
 
     public UserEntity findByNickName(String nickName) {
