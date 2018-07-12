@@ -2,6 +2,7 @@ package com.epam.epmrduaqgv.back.controller;
 
 import com.epam.epmrduaqgv.back.dto.TopicDTO;
 import com.epam.epmrduaqgv.back.entity.TopicEntity;
+import com.epam.epmrduaqgv.back.exception.BadRequestException;
 import com.epam.epmrduaqgv.back.service.TopicService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
@@ -36,16 +37,17 @@ public class TopicController {
 
     @GetMapping
     @ApiOperation(value = "Query for topics", authorizations = @Authorization(value = "oauth2"))
-    public TopicDTO findTopicByIdOrName(@RequestParam("id") String id, @RequestParam("name") String name) {
+    public TopicDTO findTopicByIdOrName(@RequestParam(value = "id", required = false) String id,
+                                        @RequestParam(value = "name", required = false) String name) {
         if (id != null) {
             if (name != null) {
-                throw new IllegalArgumentException("'id' and 'name' should not be set at the same time");
+                throw new BadRequestException("'id' and 'name' should not be set at the same time");
             }
             return objectMapper.convertValue(topicService.findTopicById(id), TopicDTO.class);
         } else if (name != null) {
             return objectMapper.convertValue(topicService.findTopicByName(name), TopicDTO.class);
         } else {
-            throw new IllegalStateException("Either 'id' or 'name' parameter should be set");
+            throw new BadRequestException("Either 'id' or 'name' parameter should be set");
         }
     }
 }

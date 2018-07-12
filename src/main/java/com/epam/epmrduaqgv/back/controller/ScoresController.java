@@ -2,6 +2,7 @@ package com.epam.epmrduaqgv.back.controller;
 
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.UserDTO;
+import com.epam.epmrduaqgv.back.exception.BadRequestException;
 import com.epam.epmrduaqgv.back.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,7 +24,7 @@ public class ScoresController {
                                           @RequestParam(value = "pageSize", defaultValue = "30") int pageSize,
                                           @RequestParam(value = "order", defaultValue = "DESC") Sort.Direction order) {
         if (topicId != null && topicName != null) {
-            throw new IllegalArgumentException("topicId and topicName should not be set at the same time");
+            throw new BadRequestException("topicId and topicName should not be set at the same time");
         }
 
         Page<UserDTO> topScores;
