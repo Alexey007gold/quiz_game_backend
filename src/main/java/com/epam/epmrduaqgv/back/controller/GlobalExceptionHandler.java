@@ -1,4 +1,4 @@
-package com.epam.epmrduaqgv.back.config.security;
+package com.epam.epmrduaqgv.back.controller;
 
 import com.epam.epmrduaqgv.back.exception.ExceptionRepresentation;
 import com.epam.epmrduaqgv.back.validation.ValidationFailure;
