@@ -4,19 +4,21 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="20180703173524" author="Oleksii Kovetskyi">
-        <createTable schemaName="${schema.name}" tableName="users">
+    <changeSet id="20180710115132" author="Oleksii Kovetskyi">
+        <createTable schemaName="${schema.name}" tableName="scores">
             <column name="id" type="varchar(36)" defaultValueComputed="${uuid_function}"/>
-            <column name="email" type="varchar(255)">
-                <constraints nullable="false" unique="true"/>
-            </column>
-            <column name="password" type="varchar(255)">
+            <column name="topic_id" type="varchar(36)">
                 <constraints nullable="false"/>
             </column>
-            <column name="nick_name" type="varchar(56)">
-                <constraints nullable="false" unique="true"/>
+            <column name="user_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="score" type="int">
+                <constraints nullable="false"/>
             </column>
         </createTable>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="scores"
+                             columnNames="topic_id, user_id"/>
     </changeSet>
 
 </databaseChangeLog>

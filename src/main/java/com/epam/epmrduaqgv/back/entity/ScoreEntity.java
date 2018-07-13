@@ -13,20 +13,22 @@ import javax.persistence.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "users", schema = "qgv")
-public class UserEntity {
+@Table(name = "scores", schema = "qgv")
+public class ScoreEntity {
 
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id;
 
-    @Column(unique = true, nullable = false)
-    private String email;
+    @OneToOne
+    @JoinColumn(name = "topic_id", nullable = false)
+    private TopicEntity topicEntity;
 
-    @Column(name = "password", nullable = false)
-    private String password;
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity userEntity;
 
-    @Column(name = "nick_name", nullable = false)
-    private String nickName;
+    @Column(name = "score", nullable = false)
+    private Long score;
 }

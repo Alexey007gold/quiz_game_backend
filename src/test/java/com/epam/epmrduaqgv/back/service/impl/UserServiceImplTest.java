@@ -1,5 +1,6 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
+import com.epam.epmrduaqgv.back.dto.UserDTO;
 import com.epam.epmrduaqgv.back.entity.UserEntity;
 import com.epam.epmrduaqgv.back.form.SignUpForm;
 import com.epam.epmrduaqgv.back.repository.UserRepository;
@@ -9,13 +10,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
-import java.util.List;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,6 +28,9 @@ public class UserServiceImplTest {
 
     private static final String EMAIL = "email";
     private static final String NICK = "testUser";
+    private static final String SCORE_FIELD = "COALESCE(s.score, 0)";
+    private static final String SUM_SCORE_FIELD = "SUM(COALESCE(s.score, 0))";
+
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -48,24 +52,65 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void shouldDelegateToRepositoryOnFindTopScoresUserList() {
-        UserEntity userEntity = getUserEntity();
-        PageImpl<UserEntity> page = new PageImpl<>(Collections.singletonList(userEntity));
-        when(userRepository.findAll(any(Pageable.class))).thenReturn(page);
+    public void shouldDelegateToRepositoryOnFindTotalScores() {
+        PageImpl<UserDTO> page = new PageImpl<>(Collections.singletonList(getUserDTO()));
+        when(userRepository.findTotalScores(any(Pageable.class))).thenReturn(page);
 
-        List<UserEntity> result = userService.findTopScoresUserList(6, Sort.Direction.DESC);
+        Page<UserDTO> result = userService.findTotalScores(0, 6, Sort.Direction.DESC);
 
 
         ArgumentCaptor<Pageable> argumentCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(userRepository).findAll(argumentCaptor.capture());
+        verify(userRepository).findTotalScores(argumentCaptor.capture());
         Pageable capturedArg = argumentCaptor.getValue();
 
         assertEquals(0, capturedArg.getPageNumber());
         assertEquals(6, capturedArg.getPageSize());
-        assertEquals(Sort.Direction.DESC, capturedArg.getSort().getOrderFor("score").getDirection());
-        assertEquals(userEntity, result.get(0));
+        assertEquals(Sort.Direction.DESC, capturedArg.getSort().getOrderFor(SUM_SCORE_FIELD).getDirection());
+        assertEquals(page, result);
     }
-    
+
+    @Test
+    public void shouldDelegateToRepositoryOnFindScoresByTopicId() {
+        PageImpl<UserDTO> page = new PageImpl<>(Collections.singletonList(getUserDTO()));
+        when(userRepository.findScoresByTopicId(any(), any(Pageable.class))).thenReturn(page);
+
+        Page<UserDTO> result = userService.findScoresByTopicId("some id", 0, 6, Sort.Direction.DESC);
+
+
+        ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(userRepository).findScoresByTopicId(idCaptor.capture(), pageableCaptor.capture());
+        Pageable capturedPageable = pageableCaptor.getValue();
+        String capturedId = idCaptor.getValue();
+
+        assertEquals(0, capturedPageable.getPageNumber());
+        assertEquals(6, capturedPageable.getPageSize());
+        assertEquals("some id", capturedId);
+        assertEquals(Sort.Direction.DESC, capturedPageable.getSort().getOrderFor(SCORE_FIELD).getDirection());
+        assertEquals(page, result);
+    }
+
+    @Test
+    public void shouldDelegateToRepositoryOnFindScoresByTopicName() {
+        PageImpl<UserDTO> page = new PageImpl<>(Collections.singletonList(getUserDTO()));
+        when(userRepository.findScoresByTopicName(any(), any(Pageable.class))).thenReturn(page);
+
+        Page<UserDTO> result = userService.findScoresByTopicName("cool topic", 0, 6, Sort.Direction.DESC);
+
+
+        ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> argumentCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(userRepository).findScoresByTopicName(nameCaptor.capture(), argumentCaptor.capture());
+        Pageable capturedPageable = argumentCaptor.getValue();
+        String capturedName = nameCaptor.getValue();
+
+        assertEquals(0, capturedPageable.getPageNumber());
+        assertEquals(6, capturedPageable.getPageSize());
+        assertEquals("cool topic", capturedName);
+        assertEquals(Sort.Direction.DESC, capturedPageable.getSort().getOrderFor(SCORE_FIELD).getDirection());
+        assertEquals(page, result);
+    }
+
     public void shouldDelegateToRepositoryOnFindByNickName() {
         UserEntity userEntity = getUserEntity();
         when(userRepository.findByNickName(NICK)).thenReturn(userEntity);
@@ -130,6 +175,13 @@ public class UserServiceImplTest {
 
     private UserEntity getUserEntity() {
         return UserEntity.builder()
+                .email(EMAIL)
+                .nickName(NICK)
+                .build();
+    }
+
+    private UserDTO getUserDTO() {
+        return UserDTO.builder()
                 .email(EMAIL)
                 .nickName(NICK)
                 .build();

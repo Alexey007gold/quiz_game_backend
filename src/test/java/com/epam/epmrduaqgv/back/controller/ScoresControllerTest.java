@@ -1,7 +1,9 @@
 package com.epam.epmrduaqgv.back.controller;
 
 import com.epam.epmrduaqgv.back.AuthenticationHelper;
+import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.UserDTO;
+import com.epam.epmrduaqgv.back.repository.TopicRepository;
 import com.epam.epmrduaqgv.back.service.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,8 +24,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.List;
-
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -32,11 +32,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @SpringBootTest
 @RunWith(SpringRunner.class)
-@Sql(scripts = {"classpath:sql/add_user.sql", "classpath:sql/add_users_with_scores.sql"})
+@Sql(scripts = {"classpath:sql/add_user.sql", "classpath:sql/add_users.sql",
+        "classpath:sql/add_topics.sql", "classpath:sql/add_scores.sql"})
 public class ScoresControllerTest {
 
     private static final String EMAIL = "test@gmail.com";
     private static final String PASSWORD = "password";
+    private static final String PATH = "/scores";
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -45,6 +47,9 @@ public class ScoresControllerTest {
 
     @SpyBean
     private UserService userService;
+
+    @Autowired
+    private TopicRepository topicRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -58,62 +63,126 @@ public class ScoresControllerTest {
     }
 
     @Test
-    public void shouldCallRepositoryMethodOnGetHighScoresWithDefaultParams() throws Exception {
+    public void shouldCallRightServiceMethodOnGetHighScoresWithDefaultParams() throws Exception {
         UserDTO userDTO = getUserDTO();
         final String accessToken = AuthenticationHelper.obtainAccessToken(mockMvc, EMAIL, PASSWORD);
 
-        String contentAsString = mockMvc.perform(get("/scores")
+        String contentAsString = mockMvc.perform(get(PATH)
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        List<UserDTO> result = objectMapper.readValue(contentAsString, new TypeReference<List<UserDTO>>() {});
+        PageDTO<UserDTO> result = objectMapper.readValue(contentAsString, new TypeReference<PageDTO<UserDTO>>() {});
 
-        ArgumentCaptor<Integer> integerArgCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> pageArgCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> pageSizeArgCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<Sort.Direction> directionArgCaptor = ArgumentCaptor.forClass(Sort.Direction.class);
-        verify(userService).findTopScoresUserList(integerArgCaptor.capture(), directionArgCaptor.capture());
+        verify(userService).findTotalScores(pageArgCaptor.capture(), pageSizeArgCaptor.capture(), directionArgCaptor.capture());
 
-        assertEquals(10, result.size());
-        assertNotEquals(userDTO, result.get(0));
-        assertEquals(10, (int) integerArgCaptor.getValue());
+        assertEquals(30, result.getPageSize());
+        assertEquals(11, result.getNumberOfElements());
+        assertNotEquals(userDTO, result.getData().get(0));
+        assertEquals(0, (int) pageArgCaptor.getValue());
+        assertEquals(30, (int) pageSizeArgCaptor.getValue());
         assertTrue(directionArgCaptor.getValue().isDescending());
     }
 
     @Test
-    public void shouldCallRepositoryMethodOnGetHighScoresWithGivenParams() throws Exception {
-        UserDTO userDTO = getUserDTO();
+    public void shouldCallRightServiceMethodOnGetHighScoresWithGivenParams() throws Exception {
         final String accessToken = AuthenticationHelper.obtainAccessToken(mockMvc, EMAIL, PASSWORD);
 
-        String contentAsString = mockMvc.perform(get("/scores")
+        String contentAsString = mockMvc.perform(get(PATH)
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .param("top", "6").param("order", "ASC"))
+                .param("page", "3")
+                .param("pageSize", "3")
+                .param("order", "ASC"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        List<UserDTO> result = objectMapper.readValue(contentAsString, new TypeReference<List<UserDTO>>() {});
+        PageDTO<UserDTO> result = objectMapper.readValue(contentAsString, new TypeReference<PageDTO<UserDTO>>() {});
 
-        ArgumentCaptor<Integer> integerArgCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> pageArgCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> pageSizeArgCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<Sort.Direction> directionArgCaptor = ArgumentCaptor.forClass(Sort.Direction.class);
-        verify(userService).findTopScoresUserList(integerArgCaptor.capture(), directionArgCaptor.capture());
+        verify(userService).findTotalScores(pageArgCaptor.capture(), pageSizeArgCaptor.capture(), directionArgCaptor.capture());
 
-        assertEquals(6, result.size());
-        assertEquals(userDTO, result.get(0));
-        assertEquals(6, (int) integerArgCaptor.getValue());
+        assertEquals(3, result.getPageSize());
+        assertEquals(2, result.getNumberOfElements());
+        assertEquals(3, (int) pageArgCaptor.getValue());
+        assertEquals(3, (int) pageSizeArgCaptor.getValue());
         assertTrue(directionArgCaptor.getValue().isAscending());
     }
 
     @Test
+    public void shouldCallRightServiceMethodOnGetHighScoresWhenTopicIdIsSet() throws Exception {
+        final String accessToken = AuthenticationHelper.obtainAccessToken(mockMvc, EMAIL, PASSWORD);
+
+        String topicId = topicRepository.findByName("Ukraine history").getId();
+        String contentAsString = mockMvc.perform(get(PATH)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("topicId", topicId))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        PageDTO<UserDTO> result = objectMapper.readValue(contentAsString, new TypeReference<PageDTO<UserDTO>>() {});
+
+        ArgumentCaptor<String> topicArgCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Integer> pageArgCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> pageSizeArgCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Sort.Direction> directionArgCaptor = ArgumentCaptor.forClass(Sort.Direction.class);
+        verify(userService).findScoresByTopicId(topicArgCaptor.capture(), pageArgCaptor.capture(),
+                pageSizeArgCaptor.capture(), directionArgCaptor.capture());
+
+        assertEquals(30, result.getPageSize());
+        assertEquals(11, result.getNumberOfElements());
+        assertEquals(topicId, topicArgCaptor.getValue());
+        assertEquals(0, (int) pageArgCaptor.getValue());
+        assertEquals(30, (int) pageSizeArgCaptor.getValue());
+        assertTrue(directionArgCaptor.getValue().isDescending());
+    }
+
+    @Test
+    public void shouldCallRightServiceMethodOnGetHighScoresWhenTopicNameIsSet() throws Exception {
+        final String accessToken = AuthenticationHelper.obtainAccessToken(mockMvc, EMAIL, PASSWORD);
+
+        String topicName = "Ukraine history";
+        String contentAsString = mockMvc.perform(get(PATH)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("topicName", topicName))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        PageDTO<UserDTO> result = objectMapper.readValue(contentAsString, new TypeReference<PageDTO<UserDTO>>() {});
+
+        ArgumentCaptor<String> topicArgCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Integer> pageArgCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> pageSizeArgCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Sort.Direction> directionArgCaptor = ArgumentCaptor.forClass(Sort.Direction.class);
+        verify(userService).findScoresByTopicName(topicArgCaptor.capture(), pageArgCaptor.capture(),
+                pageSizeArgCaptor.capture(), directionArgCaptor.capture());
+
+        assertEquals(30, result.getPageSize());
+        assertEquals(11, result.getNumberOfElements());
+        assertEquals(topicName, topicArgCaptor.getValue());
+        assertEquals(0, (int) pageArgCaptor.getValue());
+        assertEquals(30, (int) pageSizeArgCaptor.getValue());
+        assertTrue(directionArgCaptor.getValue().isDescending());
+    }
+
+    @Test
     public void scoresEndpointIsNotAccessibleWithoutAuthentication() throws Exception {
-        mockMvc.perform(get("/scores")
+        mockMvc.perform(get(PATH)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
     private UserDTO getUserDTO() {
         return UserDTO.builder()
-                .email("test@gmail.com")
+                .email(EMAIL)
                 .nickName("test_user")
                 .score(0L)
                 .build();

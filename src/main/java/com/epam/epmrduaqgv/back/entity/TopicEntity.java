@@ -13,8 +13,8 @@ import javax.persistence.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "users", schema = "qgv")
-public class UserEntity {
+@Table(name = "topics", schema = "qgv")
+public class TopicEntity {
 
     @Id
     @GeneratedValue(generator = "uuid")
@@ -22,11 +22,5 @@ public class UserEntity {
     private String id;
 
     @Column(unique = true, nullable = false)
-    private String email;
-
-    @Column(name = "password", nullable = false)
-    private String password;
-
-    @Column(name = "nick_name", nullable = false)
-    private String nickName;
+    private String name;
 }
