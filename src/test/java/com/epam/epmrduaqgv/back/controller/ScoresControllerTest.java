@@ -174,6 +174,19 @@ public class ScoresControllerTest {
     }
 
     @Test
+    public void shouldReturnBadRequestStatusOnGetHighScoresWhenTopicNameAndTopicIdAreSet() throws Exception {
+        final String accessToken = AuthenticationHelper.obtainAccessToken(mockMvc, EMAIL, PASSWORD);
+
+        String topicId = "some_id";
+        String topicName = "Ukraine history";
+        mockMvc.perform(get(PATH)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("topicId", topicId).param("topicName", topicName))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void scoresEndpointIsNotAccessibleWithoutAuthentication() throws Exception {
         mockMvc.perform(get(PATH)
                 .contentType(MediaType.APPLICATION_JSON))
