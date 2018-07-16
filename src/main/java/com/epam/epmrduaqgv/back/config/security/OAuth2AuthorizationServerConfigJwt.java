@@ -3,11 +3,9 @@ package com.epam.epmrduaqgv.back.config.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -24,14 +22,12 @@ import java.util.Collections;
 @EnableAuthorizationServer
 public class OAuth2AuthorizationServerConfigJwt extends AuthorizationServerConfigurerAdapter {
 
+    private static final String[] grantTypes = {"password", "refresh_token"};
+    private static final String[] scopes = {"read", "write"};
     @Value("${client_id}")
     private String FRONT_CLIENT_ID;
     @Value("${client_secret}")
     private String FRONT_CLIENT_SECRET;
-
-    private static final String[] grantTypes = {"password", "refresh_token"};
-    private static final String[] scopes = {"read", "write"};
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -70,11 +66,6 @@ public class OAuth2AuthorizationServerConfigJwt extends AuthorizationServerConfi
                 .tokenEnhancer(getTokenEnhancerChain())
                 .authenticationManager(authenticationManager)
                 .userDetailsService(userDetailsService);
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 
     private TokenEnhancerChain getTokenEnhancerChain() {
