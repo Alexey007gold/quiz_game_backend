@@ -34,6 +34,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ExceptionRepresentation(e), HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ExceptionRepresentation> runtimeException(IllegalStateException e) {
+        return new ResponseEntity<>(new ExceptionRepresentation(e), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ExceptionRepresentation> runtimeException(IllegalArgumentException e) {
+        return new ResponseEntity<>(new ExceptionRepresentation(e), HttpStatus.BAD_REQUEST);
+    }
+
     private HttpStatus resolveAnnotatedResponseStatus(Exception exception) {
         ResponseStatus annotation = findMergedAnnotation(exception.getClass(), ResponseStatus.class);
         return annotation == null ? HttpStatus.INTERNAL_SERVER_ERROR : annotation.value();
