@@ -4,6 +4,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,4 +27,8 @@ public class QuestionEntity {
 
     @Column(name = "value", nullable = false)
     private String value;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "question_id")
+    private List<AnswerEntity> answers;
 }

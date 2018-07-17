@@ -1,7 +1,6 @@
 package com.epam.epmrduaqgv.back.controller;
 
 import com.epam.epmrduaqgv.back.dto.AnswerDTO;
-import com.epam.epmrduaqgv.back.dto.QuestionDTO;
 import com.epam.epmrduaqgv.back.entity.AnswerEntity;
 import com.epam.epmrduaqgv.back.service.AnswerService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,7 +27,7 @@ public class AnswerController {
 
     @GetMapping
     @ApiOperation(value = "Get answers by question id", authorizations = @Authorization(value = "oauth2"))
-    public List<QuestionDTO> getRandomQuestionsByTopic(@RequestParam("questionId") String questionId) {
+    public List<AnswerDTO> getAnswersByQuestionId(@RequestParam("questionId") String questionId) {
         List<AnswerEntity> answerEntities = answerService.findByQuestionId(questionId);
         return objectMapper.convertValue(answerEntities, new TypeReference<List<AnswerDTO>>() {});
     }
