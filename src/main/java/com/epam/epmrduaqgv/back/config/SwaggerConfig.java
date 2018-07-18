@@ -17,7 +17,6 @@ import springfox.documentation.swagger.web.UiConfiguration;
 import springfox.documentation.swagger.web.UiConfigurationBuilder;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -85,14 +84,10 @@ public class SwaggerConfig {
 
     @Bean
     public SecurityScheme oauth2() {
-        List<AuthorizationScope> authorizationScopeList = Arrays.asList(
-                new AuthorizationScope("read", "read all"),
-                new AuthorizationScope("write", "access all"));
-
         List<GrantType> grantTypes =
                 Collections.singletonList(new ResourceOwnerPasswordCredentialsGrant(swaggerTokenURL));
 
-        return new OAuth("oauth2", authorizationScopeList, grantTypes);
+        return new OAuth("oauth2", Collections.emptyList(), grantTypes);
     }
 
     @Bean
