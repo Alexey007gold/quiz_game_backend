@@ -3,6 +3,7 @@ package com.epam.epmrduaqgv.back.service.impl;
 import com.epam.epmrduaqgv.back.entity.UserEntity;
 import com.epam.epmrduaqgv.back.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -18,6 +19,7 @@ import java.util.List;
  * Loads user and his authorities from DB
  */
 @Component
+@Primary
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
