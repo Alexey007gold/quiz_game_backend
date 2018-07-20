@@ -2,6 +2,7 @@ package com.epam.epmrduaqgv.back.service.impl;
 
 import com.epam.epmrduaqgv.back.entity.AnswerEntity;
 import com.epam.epmrduaqgv.back.entity.QuestionEntity;
+import com.epam.epmrduaqgv.back.entity.TopicEntity;
 import com.epam.epmrduaqgv.back.repository.AnswerRepository;
 import com.epam.epmrduaqgv.back.repository.QuestionRepository;
 import com.epam.epmrduaqgv.back.service.QuestionService;
@@ -10,7 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class InMemoryQuestionServiceImpl implements QuestionService {
@@ -21,67 +27,60 @@ public class InMemoryQuestionServiceImpl implements QuestionService {
     @Autowired
     private AnswerRepository answerRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private Map<String, List<QuestionEntity>> questionsByTopicId;
 
     @PostConstruct
     public void init() {
-        questionsByTopicId = new HashMap<>();
-        List<QuestionEntity> allQuestions = questionRepository.findAll();
-        for (QuestionEntity question: allQuestions) {
-            List<QuestionEntity> byTopic = questionsByTopicId
-                    .computeIfAbsent(question.getTopicId(), k -> new ArrayList<>());
-            byTopic.add(question);
-        }
-
+        questionsByTopicId = questionRepository.findAll().stream()
+                .collect(Collectors.groupingBy(questionEntity -> questionEntity.getTopicEntity().getId(),
+                        HashMap::new, Collectors.mapping(Function.identity(), toList())));
     }
 
     @Transactional
     @Override
-    public QuestionEntity addQuestion(String topicId, String question, List<String> answers, int correctAnswerId) {
+    public QuestionEntity addQuestion(String topicId, String question, List<String> answers, int correctAnswerIdx) {
+        if (!questionsByTopicId.containsKey(topicId)) {
+            throw new IllegalArgumentException(String.format("Topic with id '%s' does not exist", topicId));
+        }
+        TopicEntity topicEntityRef = entityManager.getReference(TopicEntity.class, topicId);
         QuestionEntity questionEntity = QuestionEntity.builder()
-                .topicId(topicId)
+                .topicEntity(topicEntityRef)
                 .value(question)
                 .build();
-        questionEntity = questionRepository.save(questionEntity);
-        List<AnswerEntity> answerEntityList = new ArrayList<>(answers.size());
-        for (int i = 0; i < answers.size(); i++) {
-            answerEntityList.add(AnswerEntity.builder()
-                    .questionId(questionEntity.getId())
-                    .value(answers.get(i))
-                    .correct(i == correctAnswerId)
-                    .build());
-        }
-        answerRepository.saveAll(answerEntityList);
 
+        String questionEntityId = questionRepository.save(questionEntity).getId();
+        String correctAnswer = answers.get(correctAnswerIdx);
 
-        List<QuestionEntity> byTopic = questionsByTopicId
-                .computeIfAbsent(questionEntity.getTopicId(), k -> new ArrayList<>());
-        byTopic.add(questionEntity);
+        answerRepository.saveAll(answers.stream()
+                .map(answer -> AnswerEntity.builder()
+                        .questionId(questionEntityId)
+                        .value(answer)
+                        .correct(answer.equals(correctAnswer))
+                        .build())
+                .collect(toList()));
+
+        questionsByTopicId.computeIfAbsent(topicId, k -> new ArrayList<>()).add(questionEntity);
         return questionEntity;
     }
 
     @Override
     public List<QuestionEntity> findRandomQuestionsByTopicId(String topicId, int quantity) {
         List<QuestionEntity> byTopic = questionsByTopicId.get(topicId);
+        if (byTopic == null) {
+            throw new IllegalArgumentException(String.format("Topic with id '%s' does not exist", topicId));
+        }
         int count = byTopic.size();
         if (count < quantity) {
             throw new IllegalStateException("There are less questions in the DB then needed");
         }
 
-        //get different random indices
-        List<Integer> randomPos = new ArrayList<>(quantity);
-        Random random = new Random();
-        while (randomPos.size() < quantity) {
-            int anInt = random.nextInt(count);
-            if (!randomPos.contains(anInt)) {
-                randomPos.add(anInt);
-            }
-        }
-
-        List<QuestionEntity> result = new ArrayList<>(quantity);
-        for (int i = 0; i < quantity; i++) {
-            result.add(byTopic.get(randomPos.get(i)));
-        }
-        return result;
+        return new Random().ints(0, count)
+                .distinct()
+                .limit(quantity)
+                .mapToObj(byTopic::get)
+                .collect(toList());
     }
 }

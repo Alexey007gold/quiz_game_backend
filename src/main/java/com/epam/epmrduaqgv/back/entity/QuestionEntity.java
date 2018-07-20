@@ -22,8 +22,9 @@ public class QuestionEntity {
     @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id;
 
-    @Column(name = "topic_id", nullable = false)
-    private String topicId;
+    @ManyToOne
+    @JoinColumn(name = "topic_id", nullable = false)
+    private TopicEntity topicEntity;
 
     @Column(name = "value", nullable = false)
     private String value;

@@ -2,14 +2,17 @@ package com.epam.epmrduaqgv.back.service.impl;
 
 import com.epam.epmrduaqgv.back.entity.AnswerEntity;
 import com.epam.epmrduaqgv.back.entity.QuestionEntity;
+import com.epam.epmrduaqgv.back.entity.TopicEntity;
 import com.epam.epmrduaqgv.back.repository.AnswerRepository;
 import com.epam.epmrduaqgv.back.repository.QuestionRepository;
+import com.epam.epmrduaqgv.back.repository.TopicRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.AbstractPageRequest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class QuestionServiceImplTest {
+public class    QuestionServiceImplTest {
 
     @InjectMocks
     private QuestionServiceImpl questionService;
@@ -34,18 +37,22 @@ public class QuestionServiceImplTest {
     @Mock
     private AnswerRepository answerRepository;
 
+    @Mock
+    private TopicRepository topicRepository;
+
     @Test
     @SuppressWarnings("unchecked")
     public void shouldCallRepositoriesMethodsOnAddQuestion() {
         String id = "some_id";
         String topicId = "some_topic_id";
         String question = "question";
-        QuestionEntity questionEntity = QuestionEntity.builder()
-                .id(id)
-                .topicId(topicId)
-                .value(question)
-                .build();
-        when(questionRepository.save(any())).thenReturn(questionEntity);
+        TopicEntity topicEntity = TopicEntity.builder().id(topicId).build();
+        when(topicRepository.findById(any())).thenReturn(Optional.of(topicEntity));
+        when(questionRepository.save(any())).then((Answer<QuestionEntity>) invocation -> {
+            QuestionEntity questionEntity = invocation.getArgument(0);
+            questionEntity.setId(id);
+            return questionEntity;
+        });
 
         List<String> answers = Arrays.asList("1", "2", "3");
         int correctAnswerId = 1;
@@ -63,7 +70,7 @@ public class QuestionServiceImplTest {
         List<AnswerEntity> answerEntityListArgument = answerEntityArgumentCaptor.getValue();
 
         assertEquals(question, questionEntityArgument.getValue());
-        assertEquals(topicId, questionEntityArgument.getTopicId());
+        assertEquals(topicId, questionEntityArgument.getTopicEntity().getId());
 
         assertEquals(answers.size(), answerEntityListArgument.size());
         for (int i = 0; i < answerEntityListArgument.size(); i++) {
@@ -79,9 +86,10 @@ public class QuestionServiceImplTest {
     public void shouldCallRepositoryOnFindRandomQuestionsByTopicId() {
         when(questionRepository.count()).thenReturn(100L);
         String topicId = "some_topic_id";
+        TopicEntity topicEntity = TopicEntity.builder().id(topicId).build();
         QuestionEntity questionEntity = QuestionEntity.builder()
                 .id("id")
-                .topicId(topicId)
+                .topicEntity(topicEntity)
                 .value("question")
                 .build();
         PageImpl<QuestionEntity> page = new PageImpl<>(Collections.singletonList(questionEntity));
@@ -115,9 +123,10 @@ public class QuestionServiceImplTest {
     public void shouldReturnDifferentResultsOnFindRandomQuestionsByTopicId() {
         when(questionRepository.count()).thenReturn(100L);
         String topicId = "some_topic_id";
+        TopicEntity topicEntity = TopicEntity.builder().id(topicId).build();
         QuestionEntity questionEntity = QuestionEntity.builder()
                 .id("id")
-                .topicId(topicId)
+                .topicEntity(topicEntity)
                 .value("question")
                 .build();
         PageImpl<QuestionEntity> page = new PageImpl<>(Collections.singletonList(questionEntity));

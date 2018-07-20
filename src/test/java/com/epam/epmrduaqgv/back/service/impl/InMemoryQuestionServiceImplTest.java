@@ -2,6 +2,7 @@ package com.epam.epmrduaqgv.back.service.impl;
 
 import com.epam.epmrduaqgv.back.entity.AnswerEntity;
 import com.epam.epmrduaqgv.back.entity.QuestionEntity;
+import com.epam.epmrduaqgv.back.entity.TopicEntity;
 import com.epam.epmrduaqgv.back.repository.AnswerRepository;
 import com.epam.epmrduaqgv.back.repository.QuestionRepository;
 import org.junit.Test;
@@ -10,10 +11,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import javax.persistence.EntityManager;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -29,6 +36,9 @@ public class InMemoryQuestionServiceImplTest {
 
     @Mock
     private AnswerRepository answerRepository;
+
+    @Mock
+    private EntityManager entityManager;
 
     @Test
     @SuppressWarnings("unchecked")
@@ -55,12 +65,13 @@ public class InMemoryQuestionServiceImplTest {
         String topicId = "some_topic_id";
         String question = "question";
         int correctAnswerId = 1;
-        QuestionEntity questionEntity = QuestionEntity.builder()
-                .id(id)
-                .topicId(topicId)
-                .value(question)
-                .build();
-        when(questionRepository.save(any())).thenReturn(questionEntity);
+        ReflectionTestUtils.setField(questionService, "questionsByTopicId", getQuestionsMap(topicId, 1));
+        when(entityManager.getReference(any(), any())).thenReturn(TopicEntity.builder().id(topicId).build());
+        when(questionRepository.save(any())).then((Answer<QuestionEntity>) invocation -> {
+            QuestionEntity argument = invocation.getArgument(0);
+            argument.setId(id);
+            return argument;
+        });
 
         List<String> answers = Arrays.asList("1", "2", "3");
 
@@ -77,7 +88,7 @@ public class InMemoryQuestionServiceImplTest {
         List<AnswerEntity> answerEntityListArgument = answerEntityArgumentCaptor.getValue();
 
         assertEquals(question, questionEntityArgument.getValue());
-        assertEquals(topicId, questionEntityArgument.getTopicId());
+        assertEquals(topicId, questionEntityArgument.getTopicEntity().getId());
 
         assertEquals(answers.size(), answerEntityListArgument.size());
         for (int i = 0; i < answerEntityListArgument.size(); i++) {
@@ -91,8 +102,8 @@ public class InMemoryQuestionServiceImplTest {
         //question was also added to the cache
         Map<String, List<QuestionEntity>> questionsByTopicId = (Map<String, List<QuestionEntity>>)
                 ReflectionTestUtils.getField(questionService, null, "questionsByTopicId");
-        assertEquals(1, questionsByTopicId.get(topicId).size());
-        assertEquals(questionEntity, questionsByTopicId.get(topicId).get(0));
+        assertEquals(2, questionsByTopicId.get(topicId).size());
+        assertEquals(questionEntityArgument, questionsByTopicId.get(topicId).get(1));
     }
 
     @Test
@@ -103,7 +114,7 @@ public class InMemoryQuestionServiceImplTest {
         List<QuestionEntity> result1 = questionService.findRandomQuestionsByTopicId(topicId, 4);
         List<QuestionEntity> result2 = questionService.findRandomQuestionsByTopicId(topicId, 4);
 
-        verify(questionRepository, times(0)).findByTopicId(any());
+        verify(questionRepository, times(0)).findByTopicEntityId(any());
         assertEquals(4, result1.size());
         assertEquals(4, result2.size());
         assertNotEquals(result1, result2);
@@ -136,15 +147,14 @@ public class InMemoryQuestionServiceImplTest {
     }
 
     private HashMap<String, List<QuestionEntity>> getQuestionsMap(String topicId, int quantity) {
-        HashMap<String, List<QuestionEntity>> map = new HashMap<>();
-        List<QuestionEntity> questionEntities = new ArrayList<>();
-        for (int i = 0; i < quantity; i++) {
-            questionEntities.add(QuestionEntity.builder()
-                    .topicId(topicId)
-                    .value(String.valueOf(i))
-                    .build());
-        }
-        map.put(topicId, questionEntities);
-        return map;
+        return IntStream.range(0, quantity)
+                .mapToObj(i -> {
+                    TopicEntity topicEntity = TopicEntity.builder().id(topicId).build();
+                    return QuestionEntity.builder()
+                            .topicEntity(topicEntity)
+                            .value(String.valueOf(i))
+                            .build();
+                }).collect(Collectors.groupingBy(questionEntity -> questionEntity.getTopicEntity().getId(),
+                        HashMap::new, Collectors.mapping(Function.identity(), toList())));
     }
 }

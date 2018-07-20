@@ -24,8 +24,8 @@ public class QuestionRepositoryTest {
     @Sql({"classpath:sql/add_topics.sql",
             "classpath:sql/add_questions_and_answers.sql"})
     public void shouldReturnSavedEntityOnSave() {
-        List<QuestionEntity> result1 = questionRepository.findByTopicName("Ukraine history");
-        List<QuestionEntity> result2 = questionRepository.findByTopicName("General IT");
+        List<QuestionEntity> result1 = questionRepository.findByTopicEntityName("Ukraine history");
+        List<QuestionEntity> result2 = questionRepository.findByTopicEntityName("General IT");
 
         assertEquals(2, result1.size());
         assertEquals(1, result2.size());
