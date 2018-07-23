@@ -34,11 +34,9 @@ public class PasswordValidatorTest {
 
     @Test
     public void isInvalidWhenDoesNotMatchPattern() {
-        assertFalse(passwordValidator.isValid("pass", null));//too short
-        assertFalse(passwordValidator.isValid("password", null));//No uppercase letters
-        assertFalse(passwordValidator.isValid("PassWord", null));//no digits
-        assertFalse(passwordValidator.isValid("p@ssw0rd", null));//no uppercase letters
+        assertFalse(passwordValidator.isValid("passw", null));//too short
         assertFalse(passwordValidator.isValid("P@SSW0RD", null));//no lowercase letters
+        assertFalse(passwordValidator.isValid("P@SSW0RDpassword123", null));//too long
     }
 
     @Test

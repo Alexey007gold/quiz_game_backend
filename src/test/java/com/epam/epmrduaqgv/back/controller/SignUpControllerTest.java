@@ -68,7 +68,7 @@ public class SignUpControllerTest {
 
         SignUpForm form = SignUpForm.builder()
                 .email(EMAIL)
-                .password(PASSWORD)
+                .password(PASSWORD.toUpperCase())
                 .nickName("n")
                 .build();
         UserEntity testUser = UserEntity.builder()
