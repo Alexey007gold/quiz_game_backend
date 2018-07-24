@@ -30,4 +30,15 @@ public class PageDTO<T> {
                 .totalElements(page.getTotalElements())
                 .build();
     }
+
+    @SuppressWarnings("unchecked")
+    public static <T> PageDTO<T> of(List<T> data, int page, int pageSize, int numberOfElements, long totalElements) {
+        return (PageDTO<T>) PageDTO.builder()
+                .data((List<Object>) data)
+                .pageNumber(page)
+                .pageSize(pageSize)
+                .numberOfElements(numberOfElements)
+                .totalElements(totalElements)
+                .build();
+    }
 }
