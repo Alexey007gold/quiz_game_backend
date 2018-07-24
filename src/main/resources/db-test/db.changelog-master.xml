@@ -8,6 +8,7 @@
     <property name="uuid_function" value="uuid_generate_v4()" dbms="postgresql"/>
     <property name="uuid_function" value="random_uuid()" dbms="h2"/>
 
+    <includeAll path="classpath:db/changelogs/" relativeToChangelogFile="false"/>
     <includeAll path="changelogs/" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
