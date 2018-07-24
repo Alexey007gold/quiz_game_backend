@@ -32,6 +32,12 @@
                                  baseColumnNames="match_id"
                                  referencedTableSchemaName="${schema.name}" referencedTableName="matches"
                                  referencedColumnNames="id"/>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="players"
+                             columnNames="match_id, user_id"
+                             constraintName="unique_match_player_constraint"/>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="players"
+                             columnNames="match_id, player_number"
+                             constraintName="unique_match_player_number_constraint"/>
     </changeSet>
 
 </databaseChangeLog>
