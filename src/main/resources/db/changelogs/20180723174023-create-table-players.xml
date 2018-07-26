@@ -1,0 +1,43 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20180723174023" author="Oleksii Kovetskyi">
+        <createTable schemaName="${schema.name}" tableName="players">
+            <column name="id" type="varchar(36)" defaultValueComputed="${uuid_function}">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="user_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="match_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_number" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="points" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="fk_player_user"
+                                 baseTableSchemaName="${schema.name}" baseTableName="players"
+                                 baseColumnNames="user_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="users"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_player_match"
+                                 baseTableSchemaName="${schema.name}" baseTableName="players"
+                                 baseColumnNames="match_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="matches"
+                                 referencedColumnNames="id"/>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="players"
+                             columnNames="match_id, user_id"
+                             constraintName="unique_match_player_constraint"/>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="players"
+                             columnNames="match_id, player_number"
+                             constraintName="unique_match_player_number_constraint"/>
+    </changeSet>
+
+</databaseChangeLog>
