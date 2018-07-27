@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +43,7 @@ public class MatchServiceImpl implements MatchService {
     @Value("${questions_in_round}")
     private Integer questionInRound;
 
+    @Transactional
     @Override
     public MatchEntity createMatch(String userId) {
         MatchEntity matchEntity = MatchEntity.builder()
@@ -59,6 +61,7 @@ public class MatchServiceImpl implements MatchService {
         return matchEntity;
     }
 
+    @Transactional
     @Override
     public RoundDTO createRound(String matchId, String topicId) {
         RoundEntity roundEntity = RoundEntity.builder()
