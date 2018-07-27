@@ -1676,22 +1676,6 @@ VALUES(random_uuid(), (SELECT id from qgv.topics t WHERE t.name = (SELECT topic3
 INSERT INTO qgv.questions
 VALUES((SELECT randId from temp_session_variables),
        (SELECT topicId from temp_session_variables),
-       'Where did CTC project become a winner in 2013?');
-
-INSERT INTO qgv.answers
-VALUES(random_uuid(), (SELECT randId from temp_session_variables), 'chess tournamet', false),
-      (random_uuid(), (SELECT randId from temp_session_variables), 'CEO Showcase Awards', false),
-      (random_uuid(), (SELECT randId from temp_session_variables), 'MyEPAM Project', false),
-      (random_uuid(), (SELECT randId from temp_session_variables), 'Football IT-league', false);
-
-DELETE
-FROM temp_session_variables;
-INSERT INTO temp_session_variables
-VALUES(random_uuid(), (SELECT id from qgv.topics t WHERE t.name = (SELECT topic3 from temp_topic_names)));
-
-INSERT INTO qgv.questions
-VALUES((SELECT randId from temp_session_variables),
-       (SELECT topicId from temp_session_variables),
        'What tournaments do take place in Kharkiv office each spring and autumn?');
 
 INSERT INTO qgv.answers
@@ -8284,22 +8268,6 @@ VALUES(random_uuid(), (SELECT id from qgv.topics t WHERE t.name = (SELECT topic4
 INSERT INTO qgv.questions
 VALUES((SELECT randId from temp_session_variables),
        (SELECT topicId from temp_session_variables),
-       'Which event doesn''t exist in EPAM Ukraine?');
-
-INSERT INTO qgv.answers
-VALUES(random_uuid(), (SELECT randId from temp_session_variables), 'Engineering Gathering', false),
-      (random_uuid(), (SELECT randId from temp_session_variables), 'IT Week', false),
-      (random_uuid(), (SELECT randId from temp_session_variables), 'JavaFriends', true),
-      (random_uuid(), (SELECT randId from temp_session_variables), 'Hackathon', false);
-
-DELETE
-FROM temp_session_variables;
-INSERT INTO temp_session_variables
-VALUES(random_uuid(), (SELECT id from qgv.topics t WHERE t.name = (SELECT topic4 from temp_topic_names)));
-
-INSERT INTO qgv.questions
-VALUES((SELECT randId from temp_session_variables),
-       (SELECT topicId from temp_session_variables),
        'When employee can get enrolled to health insurance scheme in EPAM Ukraine?');
 
 INSERT INTO qgv.answers
@@ -11489,3 +11457,4 @@ VALUES(random_uuid(), (SELECT randId from temp_session_variables), '4th century 
       (random_uuid(), (SELECT randId from temp_session_variables), '19th century', false),
       (random_uuid(), (SELECT randId from temp_session_variables), '7th century BC', false);
 
+DROP TABLE temp_topic_names;
