@@ -9,11 +9,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,10 +48,8 @@ public class TopicControllerTest {
 
         List<TopicDTO> result = topicController.getAllTopics();
 
-        ArgumentCaptor<List<TopicEntity>> captor = ArgumentCaptor.forClass(topicEntityList.getClass());
         verify(topicService).findAllTopics();
-        verify(objectMapper).convertValue(captor.capture(), any(JavaType.class));
-        assertEquals(topicEntityList, captor.getValue());
+        verify(objectMapper).convertValue(eq(topicEntityList), any(JavaType.class));
         assertEquals(topicDTOList, result);
     }
 
@@ -93,5 +91,39 @@ public class TopicControllerTest {
         verify(topicService).findTopicByName(name);
         verify(objectMapper).convertValue(topicEntity, TopicDTO.class);
         assertEquals(result, topicDTO);
+    }
+
+    @Test
+    public void shouldCallServiceMethodsOnGetRandomTopicsForMatch() {
+        String matchId = "some match id";
+        int quantity = 3;
+        List<TopicEntity> topicEntityList = getTopicEntityList(quantity);
+        List<TopicDTO> topicDTOList = getTopicDTOList(quantity);
+        TypeFactory typeFactory = TypeFactory.defaultInstance();
+        when(topicService.getRandomTopicsForMatch(matchId, quantity)).thenReturn(topicEntityList);
+        when(objectMapper.getTypeFactory()).thenReturn(typeFactory);
+        when(objectMapper.convertValue(eq(topicEntityList), any(JavaType.class))).thenReturn(topicDTOList);
+
+        List<TopicDTO> result = topicController.getRandomTopicsForMatch(matchId, quantity);
+
+        verify(topicService).getRandomTopicsForMatch(matchId, quantity);
+        verify(objectMapper).convertValue(eq(topicEntityList), any(JavaType.class));
+        assertEquals(topicDTOList, result);
+    }
+
+    private List<TopicEntity> getTopicEntityList(int quantity) {
+        List<TopicEntity> result = new ArrayList<>();
+        for (int i = 0; i < quantity; i++) {
+            result.add(mock(TopicEntity.class));
+        }
+        return result;
+    }
+
+    private List<TopicDTO> getTopicDTOList(int quantity) {
+        List<TopicDTO> result = new ArrayList<>();
+        for (int i = 0; i < quantity; i++) {
+            result.add(mock(TopicDTO.class));
+        }
+        return result;
     }
 }

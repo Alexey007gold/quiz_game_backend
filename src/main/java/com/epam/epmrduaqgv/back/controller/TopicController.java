@@ -50,4 +50,14 @@ public class TopicController {
             throw new BadRequestException("Either 'id' or 'name' parameter should be set");
         }
     }
+
+    @GetMapping("/random")
+    @ApiOperation(value = "Get random topics for a match", authorizations = @Authorization(value = "oauth2"))
+    public List<TopicDTO> getRandomTopicsForMatch(@RequestParam(value = "matchId") String matchId,
+                                                  @RequestParam(value = "quantity", defaultValue = "3") Integer quantity) {
+        List<TopicEntity> topics = topicService.getRandomTopicsForMatch(matchId, quantity);
+
+        CollectionType targetType = objectMapper.getTypeFactory().constructCollectionType(List.class, TopicDTO.class);
+        return objectMapper.convertValue(topics, targetType);
+    }
 }

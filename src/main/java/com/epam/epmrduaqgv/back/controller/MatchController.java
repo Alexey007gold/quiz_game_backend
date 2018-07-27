@@ -2,6 +2,7 @@ package com.epam.epmrduaqgv.back.controller;
 
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
+import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.epam.epmrduaqgv.back.util.ControllerUtils;
@@ -33,6 +34,19 @@ public class MatchController {
         String userId = ControllerUtils.getUserId(oauth);
 
         return objectMapper.convertValue(matchService.createMatch(userId), MatchDTO.class);
+    }
+
+    @PostMapping(path = "/createRound")
+    @ApiOperation(value = "Create a new round for a match", authorizations = @Authorization(value = "oauth2"))
+    public RoundDTO createRound(@RequestParam("matchId") String matchId,
+                                @RequestParam("topicId") String topicId) {
+        return matchService.createRound(matchId, topicId);
+    }
+
+    @GetMapping(path = "/getRounds")
+    @ApiOperation(value = "Get list of rounds for a match", authorizations = @Authorization(value = "oauth2"))
+    public List<RoundDTO> getRoundsByMatchId(@RequestParam("matchId") String matchId) {
+        return matchService.getRoundsByMatchId(matchId);
     }
 
     @GetMapping("/my")

@@ -2,6 +2,7 @@ package com.epam.epmrduaqgv.back.controller;
 
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
+import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -75,5 +76,30 @@ public class MatchControllerTest {
         verify(matchService).getMatchesByUserId(userId, page, pageSize);
         verify(objectMapper).convertValue(eq(pageContentMock), any(TypeReference.class));
         assertEquals(matchDTOsMock, result.getData());
+    }
+
+    @Test
+    public void shouldCallServiceMethodsOnCreateRound() {
+        String matchId = "some match id";
+        String topicId = "some topic id";
+        RoundDTO roundDTO = mock(RoundDTO.class);
+        when(matchService.createRound(matchId, topicId)).thenReturn(roundDTO);
+
+        RoundDTO result = matchController.createRound(matchId, topicId);
+
+        verify(matchService).createRound(matchId, topicId);
+        assertEquals(roundDTO, result);
+    }
+
+    @Test
+    public void shouldCallServiceMethodsOnGetRoundsByMatchId() {
+        String matchId = "some match id";
+        List<RoundDTO> roundDTOList = Collections.singletonList(mock(RoundDTO.class));
+        when(matchService.getRoundsByMatchId(matchId)).thenReturn(roundDTOList);
+
+        List<RoundDTO> result = matchController.getRoundsByMatchId(matchId);
+
+        verify(matchService).getRoundsByMatchId(matchId);
+        assertEquals(roundDTOList, result);
     }
 }
