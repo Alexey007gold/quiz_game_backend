@@ -1,17 +1,29 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
-import com.epam.epmrduaqgv.back.entity.MatchEntity;
-import com.epam.epmrduaqgv.back.entity.PlayerEntity;
+import com.epam.epmrduaqgv.back.PropertyLoader;
+import com.epam.epmrduaqgv.back.entity.*;
 import com.epam.epmrduaqgv.back.repository.MatchRepository;
 import com.epam.epmrduaqgv.back.repository.PlayerRepository;
+import com.epam.epmrduaqgv.back.repository.RoundQuestionRepository;
+import com.epam.epmrduaqgv.back.repository.RoundRepository;
+import com.epam.epmrduaqgv.back.service.QuestionService;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,7 +40,25 @@ public class MatchServiceImplTest {
     private MatchRepository matchRepository;
 
     @Mock
+    private RoundRepository roundRepository;
+
+    @Mock
     private PlayerRepository playerRepository;
+
+    @Mock
+    private QuestionService questionService;
+
+    @Mock
+    private RoundQuestionRepository roundQuestionRepository;
+
+    private Integer questionInRound;
+
+
+    @Before
+    public void setUp() throws IOException {
+        questionInRound = Integer.parseInt(PropertyLoader.loadApplicationProperties().getProperty("questions_in_round"));
+        ReflectionTestUtils.setField(matchService, "questionInRound", questionInRound);
+    }
 
     @Test
     public void shouldCallRepositoriesWithCorrectArgsOnCreateMatch() {
@@ -75,5 +105,59 @@ public class MatchServiceImplTest {
         assertEquals(page, pageableArgValue.getPageNumber());
         assertEquals(pageSize, pageableArgValue.getPageSize());
         assertEquals(pageMock, result);
+    }
+
+    @Test
+    public void shouldCallRepositoryMethodOnCreateRound() {
+        String matchId = "some match id";
+        String topicId = "some topic id";
+        String round_id = "round id";
+        when(roundRepository.save(any())).then((Answer<RoundEntity>) invocationOnMock -> {
+            RoundEntity argument = (RoundEntity) invocationOnMock.getArguments()[0];
+            argument.setId(round_id);
+            return argument;
+        });
+        List<QuestionEntity> questionEntityList = getQuestionEntityList(questionInRound);
+        when(questionService.findRandomQuestionsByTopicId(topicId, questionInRound)).thenReturn(questionEntityList);
+
+        matchService.createRound(matchId, topicId);
+
+        ArgumentCaptor<RoundEntity> roundEntityArgumentCaptor = ArgumentCaptor.forClass(RoundEntity.class);
+        ArgumentCaptor<List> roundQuestionListArgumentCaptor = ArgumentCaptor.forClass(List.class);
+        verify(roundRepository).save(roundEntityArgumentCaptor.capture());
+        verify(questionService).findRandomQuestionsByTopicId(topicId, questionInRound);
+        verify(roundQuestionRepository).saveAll(roundQuestionListArgumentCaptor.capture());
+
+        RoundEntity roundEntityArgument = roundEntityArgumentCaptor.getValue();
+        List<RoundQuestionEntity> roundQuestionListArgument = roundQuestionListArgumentCaptor.getValue();
+
+        assertEquals(matchId, roundEntityArgument.getMatchId());
+        assertEquals(topicId, roundEntityArgument.getTopicId());
+
+        for (int i = 0; i < roundQuestionListArgument.size(); i++) {
+            assertEquals(round_id, roundQuestionListArgument.get(i).getRoundId());
+            assertEquals(questionEntityList.get(i), roundQuestionListArgument.get(i).getQuestion());
+        }
+    }
+
+    @Test
+    public void shouldCallRepositoryMethodOnGetRoundsByMatchId() {
+        String matchId = "some match id";
+        matchService.getRoundsByMatchId(matchId);
+
+        verify(roundRepository).findByMatchId(matchId, new Sort(Sort.Direction.ASC, "createdAt"));
+    }
+
+    private List<QuestionEntity> getQuestionEntityList(int quantity) {
+        List<QuestionEntity> result = new ArrayList<>();
+        for (int i = 0; i < quantity; i++) {
+            result.add(QuestionEntity.builder()
+                    .topicEntity(TopicEntity.builder()
+                            .id("")
+                            .build())
+                    .answers(Collections.emptyList())
+                    .build());
+        }
+        return result;
     }
 }
