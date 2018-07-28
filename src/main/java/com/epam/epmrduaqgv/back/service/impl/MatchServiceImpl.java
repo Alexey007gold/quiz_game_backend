@@ -1,15 +1,19 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
-import com.epam.epmrduaqgv.back.dto.AnswerDTO;
+import com.epam.epmrduaqgv.back.dto.MatchDTO;
+import com.epam.epmrduaqgv.back.dto.PlayerDTO;
 import com.epam.epmrduaqgv.back.dto.QuestionDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.*;
+import com.epam.epmrduaqgv.back.model.RoundState;
 import com.epam.epmrduaqgv.back.repository.MatchRepository;
 import com.epam.epmrduaqgv.back.repository.PlayerRepository;
 import com.epam.epmrduaqgv.back.repository.RoundQuestionRepository;
 import com.epam.epmrduaqgv.back.repository.RoundRepository;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.epam.epmrduaqgv.back.service.QuestionService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -40,12 +44,21 @@ public class MatchServiceImpl implements MatchService {
     @Autowired
     private RoundQuestionRepository roundQuestionRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Value("${questions_in_round}")
     private Integer questionInRound;
 
+    @Value("${rounds_in_match}")
+    private Integer roundsInMatch;
+
+    @Value("${players_in_match}")
+    private Integer playersInMatch;
+
     @Transactional
     @Override
-    public MatchEntity createMatch(String userId) {
+    public MatchDTO createMatch(String userId) {
         MatchEntity matchEntity = MatchEntity.builder()
                 .build();
         matchEntity = matchRepository.save(matchEntity);
@@ -57,13 +70,19 @@ public class MatchServiceImpl implements MatchService {
                 .build();
         playerRepository.save(playerEntity);
 
-        matchEntity.setPlayers(Collections.singletonList(playerEntity));
-        return matchEntity;
+        MatchDTO matchDTO = objectMapper.convertValue(matchEntity, MatchDTO.class);
+        matchDTO.setPlayers(Collections.singletonList(objectMapper.convertValue(playerEntity, PlayerDTO.class)));
+        matchDTO.setShouldStartRound(true);
+        return matchDTO;
     }
 
     @Transactional
     @Override
-    public RoundDTO createRound(String matchId, String topicId) {
+    public RoundDTO createRound(String userId, String matchId, String topicId) {
+        MatchEntity matchEntity = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+        checkIfCanCreateRound(userId, matchEntity);
+
         RoundEntity roundEntity = RoundEntity.builder()
                 .matchId(matchId)
                 .topicId(topicId)
@@ -95,6 +114,34 @@ public class MatchServiceImpl implements MatchService {
         return createRoundDTOS(roundEntityList);
     }
 
+    @Override
+    public boolean shouldStartRound(String userId, MatchEntity matchEntity) {
+        List<RoundEntity> rounds = matchEntity.getRounds();
+        if (rounds.size() == roundsInMatch) {
+            return false;
+        }
+        if (!rounds.isEmpty() && !rounds.get(rounds.size() - 1).getRoundState().equals(RoundState.FINISHED)) {
+            return false;
+        }
+        int nextRoundCreatorPlayerIdx = rounds.size() % playersInMatch;
+        return matchEntity.getPlayers().get(nextRoundCreatorPlayerIdx).getUserId().equals(userId);
+    }
+
+
+    private void checkIfCanCreateRound(String userId, MatchEntity matchEntity) {
+        List<RoundEntity> rounds = matchEntity.getRounds();
+        if (rounds.size() == roundsInMatch) {
+            throw new IllegalStateException("No more rounds can be created for this match");
+        }
+        if (!rounds.isEmpty() && !rounds.get(rounds.size() - 1).getRoundState().equals(RoundState.FINISHED)) {
+            throw new IllegalStateException("Previous round is not finished yet");
+        }
+        int nextRoundCreatorPlayerIdx = rounds.size() % playersInMatch;
+        if (!matchEntity.getPlayers().get(nextRoundCreatorPlayerIdx).getUserId().equals(userId)) {
+            throw new IllegalStateException("It's not your turn to create round now");
+        }
+    }
+
 
 
     /*Mapping methods*/
@@ -103,51 +150,34 @@ public class MatchServiceImpl implements MatchService {
         return roundEntityList.stream()
                 .map(roundEntity -> {
                     List<QuestionDTO> questionDTOList = createQuestionDTOS(roundEntity);
-                    return RoundDTO.builder()
-                            .roundId(roundEntity.getId())
-                            .questions(questionDTOList)
-                            .build();
+                    RoundDTO roundDTO = objectMapper.convertValue(roundEntity, RoundDTO.class);
+                    roundDTO.setQuestions(questionDTOList);
+                    return roundDTO;
                 }).collect(Collectors.toList());
     }
 
     private List<QuestionDTO> createQuestionDTOS(RoundEntity roundEntity) {
         return roundEntity.getQuestions().stream()
-                .map(rq -> QuestionDTO.builder()
-                        .id(rq.getQuestion().getId())
-                        .topicId(roundEntity.getTopicId())
-                        .value(rq.getQuestion().getId())
-                        .answers(createAnswerDTOS(rq.getQuestion()))
-                        .build())
+                .map(rq -> {
+                    QuestionDTO questionDTO = objectMapper.convertValue(rq.getQuestion(), QuestionDTO.class);
+                    questionDTO.setTopicId(rq.getQuestion().getTopicEntity().getId());
+                    return questionDTO;
+                })
                 .collect(Collectors.toList());
     }
 
     private RoundDTO createRoundDTO(RoundEntity roundEntity, List<QuestionEntity> questionEntities) {
         List<QuestionDTO> questionDTOList = createQuestionDTOS(questionEntities);
-        return RoundDTO.builder()
-                .roundId(roundEntity.getId())
-                .questions(questionDTOList)
-                .build();
+        RoundDTO roundDTO = objectMapper.convertValue(roundEntity, RoundDTO.class);
+        roundDTO.setQuestions(questionDTOList);
+        return roundDTO;
     }
 
     private List<QuestionDTO> createQuestionDTOS(List<QuestionEntity> questionEntities) {
-        return questionEntities.stream()
-                .map(q -> QuestionDTO.builder()
-                        .id(q.getId())
-                        .topicId(q.getTopicEntity().getId())
-                        .value(q.getValue())
-                        .answers(createAnswerDTOS(q))
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    private List<AnswerDTO> createAnswerDTOS(QuestionEntity questionEntity) {
-        return questionEntity.getAnswers().stream()
-                .map(a -> AnswerDTO.builder()
-                        .id(a.getId())
-                        .questionId(a.getQuestionId())
-                        .value(a.getValue())
-                        .correct(a.isCorrect())
-                        .build())
-                .collect(Collectors.toList());
+        List<QuestionDTO> questionDTOS = objectMapper.convertValue(questionEntities, new TypeReference<List<QuestionDTO>>() {});
+        for (int i = 0; i < questionDTOS.size(); i++) {
+            questionDTOS.get(i).setTopicId(questionEntities.get(i).getTopicEntity().getId());
+        }
+        return questionDTOS;
     }
 }

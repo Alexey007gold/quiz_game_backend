@@ -40,6 +40,11 @@ public class MatchEntity {
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "match_id")
+    @OrderBy("playerNumber ASC")
     private List<PlayerEntity> players;
 
+    @OneToMany
+    @JoinColumn(name = "match_id")
+    @OrderBy("createdAt ASC")
+    private List<RoundEntity> rounds;
 }

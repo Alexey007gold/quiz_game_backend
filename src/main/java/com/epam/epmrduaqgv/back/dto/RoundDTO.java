@@ -1,7 +1,9 @@
 package com.epam.epmrduaqgv.back.dto;
 
+import com.epam.epmrduaqgv.back.model.RoundState;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @NoArgsConstructor
@@ -13,7 +15,17 @@ import java.util.List;
 @Setter
 public class RoundDTO {
 
-    private String roundId;
+    private String id;
+
+    private String matchId;
+
+    private String topicId;
+
+    private RoundState roundState;
+
+    private Instant createdAt;
+
+    private Instant updatedAt;
 
     private List<QuestionDTO> questions;
 }

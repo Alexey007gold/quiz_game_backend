@@ -24,4 +24,6 @@ public class MatchDTO {
     private Instant updatedAt;
 
     private List<PlayerDTO> players;
+
+    private boolean shouldStartRound;
 }

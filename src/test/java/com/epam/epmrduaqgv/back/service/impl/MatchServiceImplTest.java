@@ -1,12 +1,14 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
-import com.epam.epmrduaqgv.back.PropertyLoader;
+import com.epam.epmrduaqgv.back.dto.MatchDTO;
 import com.epam.epmrduaqgv.back.entity.*;
+import com.epam.epmrduaqgv.back.model.RoundState;
 import com.epam.epmrduaqgv.back.repository.MatchRepository;
 import com.epam.epmrduaqgv.back.repository.PlayerRepository;
 import com.epam.epmrduaqgv.back.repository.RoundQuestionRepository;
 import com.epam.epmrduaqgv.back.repository.RoundRepository;
 import com.epam.epmrduaqgv.back.service.QuestionService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,24 +16,26 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MatchServiceImplTest {
+
+    private static final String MATCH_ID = "some match id";
 
     @InjectMocks
     private MatchServiceImpl matchService;
@@ -51,13 +55,24 @@ public class MatchServiceImplTest {
     @Mock
     private RoundQuestionRepository roundQuestionRepository;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     private Integer questionInRound;
+
+    private Integer roundsInMatch;
+
+    private Integer playersInMatch;
 
 
     @Before
-    public void setUp() throws IOException {
-        questionInRound = Integer.parseInt(PropertyLoader.loadApplicationProperties().getProperty("questions_in_round"));
+    public void setUp() {
+        questionInRound = 5;
+        roundsInMatch = 5;
+        playersInMatch = 3;
         ReflectionTestUtils.setField(matchService, "questionInRound", questionInRound);
+        ReflectionTestUtils.setField(matchService, "roundsInMatch", roundsInMatch);
+        ReflectionTestUtils.setField(matchService, "playersInMatch", playersInMatch);
     }
 
     @Test
@@ -65,10 +80,18 @@ public class MatchServiceImplTest {
         String id = "id";
         String userId = "some user id";
         MatchEntity matchEntity = MatchEntity.builder()
-                .id(id).build();
+                .id(id).createdAt(Instant.now()).updatedAt(Instant.now())
+                .build();
         when(matchRepository.save(any())).thenReturn(matchEntity);
+        when(playerRepository.save(any())).then(invocation -> {
+            PlayerEntity argument = invocation.getArgument(0);
+            argument.setId(id);
+            return argument;
+        });
+        when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
+        when(objectMapper.convertValue(any(), eq(MatchDTO.class))).thenAnswer(i -> MatchDTO.builder().build());
 
-        MatchEntity result = matchService.createMatch(userId);
+        MatchDTO result = matchService.createMatch(userId);
 
         ArgumentCaptor<PlayerEntity> playerEntityCaptor = ArgumentCaptor.forClass(PlayerEntity.class);
         verify(matchRepository).save(any());
@@ -79,7 +102,9 @@ public class MatchServiceImplTest {
         assertEquals(0, playerEntityArgument.getPoints());
         assertEquals(matchEntity.getId(), playerEntityArgument.getMatchId());
         assertEquals(userId, playerEntityArgument.getUserId());
-        assertEquals(matchEntity, result);
+        assertEquals(1, result.getPlayers().size());
+
+        assertTrue(result.isShouldStartRound());
     }
 
     @Test
@@ -108,22 +133,143 @@ public class MatchServiceImplTest {
     }
 
     @Test
-    public void shouldCallRepositoryMethodOnCreateRound() {
-        String matchId = "some match id";
+    public void shouldCallRepositoryMethodOnCreateRound1() {//When no rounds are created yet
+        when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
+
+        MatchEntity matchEntity = createMatchEntity(1, 0, MATCH_ID);
+        createRoundFlow(matchEntity, matchEntity.getPlayers().get(0).getUserId(), MATCH_ID);
+    }
+
+    @Test
+    public void shouldCallRepositoryMethodOnCreateRound2() {//when there is one finished round
+        when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
+
+        MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
+        createRoundFlow(matchEntity, matchEntity.getPlayers().get(1).getUserId(), MATCH_ID);
+    }
+
+    @Test
+    public void shouldCallRepositoryMethodOnCreateRound3() {//when every player has created one round
+        when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
+
+        MatchEntity matchEntity = createMatchEntity(playersInMatch, playersInMatch, MATCH_ID);
+        createRoundFlow(matchEntity, matchEntity.getPlayers().get(0).getUserId(), MATCH_ID);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowAnExceptionOnCreateRound1() {//when all rounds are played
+        MatchEntity matchEntity = createMatchEntity(playersInMatch, roundsInMatch, MATCH_ID);
+        createRoundFlow(matchEntity, "no matter", MATCH_ID);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowAnExceptionOnCreateRound2() {//when there is an unfinished round
+        MatchEntity matchEntity = createMatchEntity(2, 3, MATCH_ID);
+        matchEntity.getRounds().get(2).setRoundState(RoundState.IN_PROGRESS);
+        createRoundFlow(matchEntity, matchEntity.getPlayers().get(1).getUserId(), MATCH_ID);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowAnExceptionOnCreateRound3() {//when it's not your turn
+        MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
+        createRoundFlow(matchEntity, matchEntity.getPlayers().get(0).getUserId(), MATCH_ID);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowAnExceptionOnCreateRound4() {//when it's not your turn
+        MatchEntity matchEntity = createMatchEntity(2, 0, MATCH_ID);
+        createRoundFlow(matchEntity, matchEntity.getPlayers().get(1).getUserId(), MATCH_ID);
+    }
+
+    @Test
+    public void shouldReturnTrueOnShouldStartRound1() {//When no rounds are created yet
+        MatchEntity matchEntity = createMatchEntity(1, 0, MATCH_ID);
+        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldReturnTrueOnShouldStartRound2() {//when there is one finished round
+        MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
+        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldReturnTrueOnShouldStartRound3() {//when every player has created one round
+        MatchEntity matchEntity = createMatchEntity(playersInMatch, playersInMatch, MATCH_ID);
+        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldReturnFalseOnShouldStartRound1() {//when all rounds are played
+        MatchEntity matchEntity = createMatchEntity(playersInMatch, roundsInMatch, MATCH_ID);
+        boolean result = matchService.shouldStartRound("no matter", matchEntity);
+        assertFalse(result);
+    }
+
+    @Test
+    public void shouldReturnFalseOnShouldStartRound2() {//when there is an unfinished round
+        MatchEntity matchEntity = createMatchEntity(2, 3, MATCH_ID);
+        matchEntity.getRounds().get(2).setRoundState(RoundState.IN_PROGRESS);
+        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        assertFalse(result);
+    }
+
+    @Test
+    public void shouldReturnFalseOnShouldStartRound3() {//when it's not your turn
+        MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
+        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        assertFalse(result);
+    }
+
+    @Test
+    public void shouldReturnFalseOnShouldStartRound4() {//when it's not your turn
+        MatchEntity matchEntity = createMatchEntity(2, 0, MATCH_ID);
+        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        assertFalse(result);
+    }
+
+    private MatchEntity createMatchEntity(int playersNumber, int roundsPlayed, String matchId) {
+        List<PlayerEntity> playerEntityList = new ArrayList<>(playersNumber);
+        for (int i = 0; i < playersNumber; i++) {
+            playerEntityList.add(PlayerEntity.builder()
+                    .matchId(matchId)
+                    .userId("user" + (i + 1))
+                    .playerNumber(i + 1)
+                    .build());
+        }
+        List<RoundEntity> roundEntityList = new ArrayList<>(roundsPlayed);
+        for (int i = 0; i < roundsPlayed; i++) {
+            roundEntityList.add(RoundEntity.builder()
+                    .matchId(matchId)
+                    .roundState(RoundState.FINISHED)
+                    .build());
+        }
+        return MatchEntity.builder()
+                .players(playerEntityList)
+                .rounds(roundEntityList)
+                .build();
+    }
+
+    private void createRoundFlow(MatchEntity matchEntity, String userId, String matchId) {
         String topicId = "some topic id";
         String round_id = "round id";
-        when(roundRepository.save(any())).then((Answer<RoundEntity>) invocationOnMock -> {
-            RoundEntity argument = (RoundEntity) invocationOnMock.getArguments()[0];
+        when(roundRepository.save(any())).then(invocationOnMock -> {
+            RoundEntity argument = invocationOnMock.getArgument(0);
             argument.setId(round_id);
             return argument;
         });
         List<QuestionEntity> questionEntityList = getQuestionEntityList(questionInRound);
         when(questionService.findRandomQuestionsByTopicId(topicId, questionInRound)).thenReturn(questionEntityList);
+        when(matchRepository.findById(matchId)).thenReturn(Optional.of(matchEntity));
 
-        matchService.createRound(matchId, topicId);
+        matchService.createRound(userId, matchId, topicId);
 
         ArgumentCaptor<RoundEntity> roundEntityArgumentCaptor = ArgumentCaptor.forClass(RoundEntity.class);
         ArgumentCaptor<List> roundQuestionListArgumentCaptor = ArgumentCaptor.forClass(List.class);
+        verify(matchRepository).findById(matchId);
         verify(roundRepository).save(roundEntityArgumentCaptor.capture());
         verify(questionService).findRandomQuestionsByTopicId(topicId, questionInRound);
         verify(roundQuestionRepository).saveAll(roundQuestionListArgumentCaptor.capture());
@@ -142,7 +288,7 @@ public class MatchServiceImplTest {
 
     @Test
     public void shouldCallRepositoryMethodOnGetRoundsByMatchId() {
-        String matchId = "some match id";
+        String matchId = MATCH_ID;
         matchService.getRoundsByMatchId(matchId);
 
         verify(roundRepository).findByMatchId(matchId, new Sort(Sort.Direction.ASC, "createdAt"));
