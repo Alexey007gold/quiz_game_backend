@@ -48,7 +48,7 @@ public class MatchServiceImpl implements MatchService {
     private ObjectMapper objectMapper;
 
     @Value("${questions_in_round}")
-    private Integer questionInRound;
+    private Integer questionsInRound;
 
     @Value("${rounds_in_match}")
     private Integer roundsInMatch;
@@ -89,7 +89,7 @@ public class MatchServiceImpl implements MatchService {
                 .build();
         roundRepository.save(roundEntity);
 
-        List<QuestionEntity> questions = inMemoryQuestionServiceImpl.findRandomQuestionsByTopicId(topicId, questionInRound);
+        List<QuestionEntity> questions = inMemoryQuestionServiceImpl.findRandomQuestionsByTopicId(topicId, questionsInRound);
         List<RoundQuestionEntity> roundQuestionEntityList = questions.stream()
                 .map(questionEntity -> RoundQuestionEntity.builder()
                         .roundId(roundEntity.getId())

@@ -1,6 +1,7 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
+import com.epam.epmrduaqgv.back.dto.QuestionDTO;
 import com.epam.epmrduaqgv.back.entity.*;
 import com.epam.epmrduaqgv.back.model.RoundState;
 import com.epam.epmrduaqgv.back.repository.MatchRepository;
@@ -8,6 +9,7 @@ import com.epam.epmrduaqgv.back.repository.PlayerRepository;
 import com.epam.epmrduaqgv.back.repository.RoundQuestionRepository;
 import com.epam.epmrduaqgv.back.repository.RoundRepository;
 import com.epam.epmrduaqgv.back.service.QuestionService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +60,7 @@ public class MatchServiceImplTest {
     @Mock
     private ObjectMapper objectMapper;
 
-    private Integer questionInRound;
+    private Integer questionsInRound;
 
     private Integer roundsInMatch;
 
@@ -67,10 +69,10 @@ public class MatchServiceImplTest {
 
     @Before
     public void setUp() {
-        questionInRound = 5;
+        questionsInRound = 5;
         roundsInMatch = 5;
         playersInMatch = 3;
-        ReflectionTestUtils.setField(matchService, "questionInRound", questionInRound);
+        ReflectionTestUtils.setField(matchService, "questionsInRound", questionsInRound);
         ReflectionTestUtils.setField(matchService, "roundsInMatch", roundsInMatch);
         ReflectionTestUtils.setField(matchService, "playersInMatch", playersInMatch);
     }
@@ -134,6 +136,8 @@ public class MatchServiceImplTest {
 
     @Test
     public void shouldCallRepositoryMethodOnCreateRound1() {//When no rounds are created yet
+        when(objectMapper.convertValue(any(), any(TypeReference.class)))
+                .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
 
         MatchEntity matchEntity = createMatchEntity(1, 0, MATCH_ID);
@@ -142,6 +146,8 @@ public class MatchServiceImplTest {
 
     @Test
     public void shouldCallRepositoryMethodOnCreateRound2() {//when there is one finished round
+        when(objectMapper.convertValue(any(), any(TypeReference.class)))
+                .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
 
         MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
@@ -150,6 +156,8 @@ public class MatchServiceImplTest {
 
     @Test
     public void shouldCallRepositoryMethodOnCreateRound3() {//when every player has created one round
+        when(objectMapper.convertValue(any(), any(TypeReference.class)))
+                .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
 
         MatchEntity matchEntity = createMatchEntity(playersInMatch, playersInMatch, MATCH_ID);
@@ -261,8 +269,8 @@ public class MatchServiceImplTest {
             argument.setId(round_id);
             return argument;
         });
-        List<QuestionEntity> questionEntityList = getQuestionEntityList(questionInRound);
-        when(questionService.findRandomQuestionsByTopicId(topicId, questionInRound)).thenReturn(questionEntityList);
+        List<QuestionEntity> questionEntityList = getQuestionEntityList(questionsInRound);
+        when(questionService.findRandomQuestionsByTopicId(topicId, questionsInRound)).thenReturn(questionEntityList);
         when(matchRepository.findById(matchId)).thenReturn(Optional.of(matchEntity));
 
         matchService.createRound(userId, matchId, topicId);
@@ -271,7 +279,7 @@ public class MatchServiceImplTest {
         ArgumentCaptor<List> roundQuestionListArgumentCaptor = ArgumentCaptor.forClass(List.class);
         verify(matchRepository).findById(matchId);
         verify(roundRepository).save(roundEntityArgumentCaptor.capture());
-        verify(questionService).findRandomQuestionsByTopicId(topicId, questionInRound);
+        verify(questionService).findRandomQuestionsByTopicId(topicId, questionsInRound);
         verify(roundQuestionRepository).saveAll(roundQuestionListArgumentCaptor.capture());
 
         RoundEntity roundEntityArgument = roundEntityArgumentCaptor.getValue();
@@ -305,5 +313,13 @@ public class MatchServiceImplTest {
                     .build());
         }
         return result;
+    }
+
+    private Object getQuestionDTOList(int quantity) {
+        List<QuestionDTO> questionDTOList = new ArrayList<>(quantity);
+        for (int i = 0; i < quantity; i++) {
+            questionDTOList.add(mock(QuestionDTO.class));
+        }
+        return questionDTOList;
     }
 }
