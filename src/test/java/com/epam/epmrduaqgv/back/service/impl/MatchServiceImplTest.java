@@ -101,7 +101,6 @@ public class MatchServiceImplTest {
 
         PlayerEntity playerEntityArgument = playerEntityCaptor.getValue();
         assertEquals(1, playerEntityArgument.getPlayerNumber());
-        assertEquals(0, playerEntityArgument.getPoints());
         assertEquals(matchEntity.getId(), playerEntityArgument.getMatchId());
         assertEquals(userId, playerEntityArgument.getUserId());
         assertEquals(1, result.getPlayers().size());

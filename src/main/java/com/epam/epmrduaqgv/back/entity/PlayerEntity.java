@@ -29,8 +29,4 @@ public class PlayerEntity {
 
     @Column(name = "player_number", nullable = false)
     private int playerNumber;
-
-    @Builder.Default
-    @Column(name = "points", nullable = false)
-    private int points = 0;
 }
