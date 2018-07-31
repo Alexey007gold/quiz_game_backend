@@ -5,6 +5,7 @@ import com.epam.epmrduaqgv.back.dto.PlayerDTO;
 import com.epam.epmrduaqgv.back.dto.QuestionDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.*;
+import com.epam.epmrduaqgv.back.model.MatchState;
 import com.epam.epmrduaqgv.back.model.RoundState;
 import com.epam.epmrduaqgv.back.repository.MatchRepository;
 import com.epam.epmrduaqgv.back.repository.PlayerRepository;
@@ -20,9 +21,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,23 +59,43 @@ public class MatchServiceImpl implements MatchService {
     @Value("${players_in_match}")
     private Integer playersInMatch;
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     @Override
-    public MatchDTO createMatch(String userId) {
-        MatchEntity matchEntity = MatchEntity.builder()
-                .build();
+    public MatchDTO getMatchForUser(String userId) {
+        MatchEntity matchEntity;
+        List<PlayerEntity> playerEntityList;
+        int newPlayerNumber = 1;
+
+        List<MatchEntity> matches = matchRepository
+                .findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId((long) playersInMatch, userId);
+        if (!matches.isEmpty()) {
+            matchEntity = matches.get(0);
+            playerEntityList = new ArrayList<>(matchEntity.getPlayers());
+            newPlayerNumber += playerEntityList.size();
+            if (newPlayerNumber == playersInMatch) {
+                matchEntity.setMatchState(MatchState.IN_PROGRESS);
+                matchEntity.setUpdatedAt(Instant.now());
+            }
+        } else {
+            Instant now = Instant.now();
+            matchEntity = MatchEntity.builder()
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
+            playerEntityList = new ArrayList<>();
+        }
         matchEntity = matchRepository.save(matchEntity);
 
-        PlayerEntity playerEntity = PlayerEntity.builder()
+        PlayerEntity playerEntity = playerRepository.save(PlayerEntity.builder()
                 .userId(userId)
                 .matchId(matchEntity.getId())
-                .playerNumber(1)
-                .build();
-        playerRepository.save(playerEntity);
+                .playerNumber(newPlayerNumber)
+                .build());
+        playerEntityList.add(playerEntity);
 
         MatchDTO matchDTO = objectMapper.convertValue(matchEntity, MatchDTO.class);
-        matchDTO.setPlayers(Collections.singletonList(objectMapper.convertValue(playerEntity, PlayerDTO.class)));
-        matchDTO.setShouldStartRound(true);
+        matchDTO.setPlayers(objectMapper.convertValue(playerEntityList, new TypeReference<List<PlayerDTO>>() {}));
+        matchDTO.setShouldStartRound(matches.isEmpty());
         return matchDTO;
     }
 

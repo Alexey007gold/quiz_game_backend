@@ -24,8 +24,8 @@ public class MatchFacadeImpl implements MatchFacade {
     private ObjectMapper objectMapper;
 
     @Override
-    public MatchDTO createMatch(String userId) {
-        return matchService.createMatch(userId);
+    public synchronized MatchDTO getMatchForUser(String userId) {
+        return matchService.getMatchForUser(userId);
     }
 
     @Override

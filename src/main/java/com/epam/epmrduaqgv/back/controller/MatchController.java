@@ -22,11 +22,12 @@ public class MatchController {
     private MatchFacade matchFacade;
 
     @PostMapping(path = "/create")
-    @ApiOperation(value = "Create a new match for the current user", authorizations = @Authorization(value = "oauth2"))
+    @ApiOperation(value = "Create a new match for the current user or join to an existing one " +
+            "if there is a match waiting for opponents", authorizations = @Authorization(value = "oauth2"))
     public MatchDTO createMatch(@ApiIgnore OAuth2Authentication oauth) {
         String userId = ControllerUtils.getUserId(oauth);
 
-        return matchFacade.createMatch(userId);
+        return matchFacade.getMatchForUser(userId);
     }
 
     @PostMapping(path = "/createRound")

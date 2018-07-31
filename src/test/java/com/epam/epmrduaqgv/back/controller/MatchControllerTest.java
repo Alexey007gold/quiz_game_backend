@@ -35,11 +35,11 @@ public class MatchControllerTest {
         String userId = "some user id";
         when(oauthMock.getDetails()).thenReturn(authenticationDetailsMock);
         when(authenticationDetailsMock.getDecodedDetails()).thenReturn(Collections.singletonMap("id", userId));
-        when(matchFacade.createMatch(userId)).thenReturn(matchDTOMock);
+        when(matchFacade.getMatchForUser(userId)).thenReturn(matchDTOMock);
 
         MatchDTO result = matchController.createMatch(oauthMock);
 
-        verify(matchFacade).createMatch(userId);
+        verify(matchFacade).getMatchForUser(userId);
         assertEquals(matchDTOMock, result);
     }
 
