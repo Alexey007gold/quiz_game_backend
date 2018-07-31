@@ -1,0 +1,42 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20180728204814" author="Oleksii Kovetskyi">
+        <createTable schemaName="${schema.name}" tableName="players_answers">
+            <column name="id" type="varchar(36)" defaultValueComputed="${uuid_function}">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="round_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="question_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="answer_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="fk_players_answers_round_id"
+                                 baseTableSchemaName="${schema.name}" baseTableName="players_answers"
+                                 baseColumnNames="round_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="rounds"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_players_answers_question_id"
+                                 baseTableSchemaName="${schema.name}" baseTableName="players_answers"
+                                 baseColumnNames="question_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="questions"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_players_answers_answer_id"
+                                 baseTableSchemaName="${schema.name}" baseTableName="players_answers"
+                                 baseColumnNames="answer_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="answers"
+                                 referencedColumnNames="id"/>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="players_answers"
+                             columnNames="round_id, question_id"
+                             constraintName="unique_round_question_players_answers_constraint"/>
+    </changeSet>
+
+</databaseChangeLog>
