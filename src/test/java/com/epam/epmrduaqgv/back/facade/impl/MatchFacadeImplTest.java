@@ -4,6 +4,7 @@ import com.epam.epmrduaqgv.back.dto.MatchDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
+import com.epam.epmrduaqgv.back.service.AnswerService;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +33,9 @@ public class MatchFacadeImplTest {
 
     @Mock
     private MatchService matchService;
+
+    @Mock
+    private AnswerService answerService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -96,6 +100,18 @@ public class MatchFacadeImplTest {
 
         verify(matchService).getRoundsByMatchId(matchId);
         assertEquals(roundDTOList, result);
+    }
+
+    @Test
+    public void shouldCallServiceMethodsOnSaveAnswer() {
+        String userId = "some user id";
+        String roundId = "some round id";
+        String questionId = "some question id";
+        String answerId = "some answer id";
+
+        matchFacade.saveAnswer(userId, roundId, questionId, answerId);
+
+        verify(answerService).saveAnswer(userId, roundId, questionId, answerId);
     }
 
 }
