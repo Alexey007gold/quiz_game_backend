@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.epam.epmrduaqgv.back.model.MatchState.FINISHED;
+
 @Service
 public class MatchServiceImpl implements MatchService {
 
@@ -59,9 +61,14 @@ public class MatchServiceImpl implements MatchService {
     @Value("${players_in_match}")
     private Integer playersInMatch;
 
+    @Value("${max_matches_in_progress}")
+    private Integer maxMatchesInProgress;
+
     @Transactional(isolation = Isolation.SERIALIZABLE)
     @Override
     public MatchDTO getMatchForUser(String userId) {
+        checkIfCanAddMatch(userId);
+
         MatchEntity matchEntity;
         List<PlayerEntity> playerEntityList;
         int newPlayerNumber = 1;
@@ -97,6 +104,13 @@ public class MatchServiceImpl implements MatchService {
         matchDTO.setPlayers(objectMapper.convertValue(playerEntityList, new TypeReference<List<PlayerDTO>>() {}));
         matchDTO.setShouldStartRound(matches.isEmpty());
         return matchDTO;
+    }
+
+    private void checkIfCanAddMatch(String userId) {
+        List<MatchEntity> match = matchRepository.findByPlayerWithUserIdAndMatchStateNot(userId, FINISHED);
+        if (match.size() == maxMatchesInProgress) {
+            throw new IllegalStateException("You have reached the limit of matches in progress");
+        }
     }
 
     @Transactional

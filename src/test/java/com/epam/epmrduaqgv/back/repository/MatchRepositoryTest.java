@@ -12,8 +12,10 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
+import static com.epam.epmrduaqgv.back.model.MatchState.*;
 import static org.junit.Assert.*;
 
 @DataJpaTest
@@ -60,6 +62,20 @@ public class MatchRepositoryTest {
         assertEquals(3, result3.getNumberOfElements());
         assertEquals(3, result4.getNumberOfElements());
         assertEquals(1, result5.getNumberOfElements());
+    }
+
+    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql"})
+    @Test
+    public void shouldReturnCorrectResultsOnFindByPlayerWithUserIdAndMatchStateIn() {
+        String userId = userRepository.findByEmail("test1@gmail.com").getId();
+
+        List<MatchEntity> result1 = matchRepository.findByPlayerWithUserIdAndMatchStateIn(userId,
+                Arrays.asList(WAITING_FOR_OPPONENT, IN_PROGRESS));
+        List<MatchEntity> result2 = matchRepository.findByPlayerWithUserIdAndMatchStateIn(userId,
+                Arrays.asList(FINISHED));
+
+        assertEquals(4, result1.size());
+        assertEquals(1, result2.size());
     }
 
     @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql"})
