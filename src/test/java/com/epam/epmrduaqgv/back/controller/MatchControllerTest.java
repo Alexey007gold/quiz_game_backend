@@ -90,4 +90,20 @@ public class MatchControllerTest {
         verify(matchFacade).getRoundsByMatchId(matchId);
         assertEquals(roundDTOList, result);
     }
+
+    @Test
+    public void shouldCallFacadeMethodOnGiveAnswer() {
+        OAuth2Authentication oauthMock = mock(OAuth2Authentication.class);
+        OAuth2AuthenticationDetails authenticationDetailsMock = mock(OAuth2AuthenticationDetails.class);
+        String userId = "some user id";
+        String roundId = "some round id";
+        String questionId = "some question id";
+        String answerId = "some answer id";
+        when(oauthMock.getDetails()).thenReturn(authenticationDetailsMock);
+        when(authenticationDetailsMock.getDecodedDetails()).thenReturn(Collections.singletonMap("id", userId));
+
+        matchController.giveAnswer(oauthMock, roundId, questionId, answerId);
+
+        verify(matchFacade).saveAnswer(userId, roundId, questionId, answerId);
+    }
 }

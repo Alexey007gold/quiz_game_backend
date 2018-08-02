@@ -13,20 +13,20 @@ import javax.persistence.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "players", schema = "qgv")
-public class PlayerEntity {
+@Table(name = "round_scores", schema = "qgv")
+public class RoundScoresEntity {
 
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id;
 
-    @Column(name = "user_id", nullable = false)
-    private String userId;
+    @Column(name = "round_id", nullable = false)
+    private String roundId;
 
-    @Column(name = "match_id", nullable = false)
-    private String matchId;
+    @Column(name = "player_id", nullable = false)
+    private String playerId;
 
-    @Column(name = "player_number", nullable = false)
-    private int playerNumber;
+    @Column(name = "score", nullable = false)
+    private Integer score;
 }

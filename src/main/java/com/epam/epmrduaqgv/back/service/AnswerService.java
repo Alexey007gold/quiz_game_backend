@@ -7,4 +7,6 @@ import java.util.List;
 public interface AnswerService {
 
     List<AnswerEntity> findByQuestionId(String questionId);
+
+    void saveAnswer(String userId, String roundId, String questionId, String answerId);
 }

@@ -18,6 +18,4 @@ public class PlayerDTO {
     private String matchId;
 
     private int playerNumber;
-
-    private int points;
 }
