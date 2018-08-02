@@ -71,7 +71,7 @@ public class MatchFacadeImplTest {
         int page = 0;
         int pageSize = 5;
         when(matchService.getMatchesByUserId(userId, page, pageSize)).thenReturn(matchEntityPageMock);
-        when(matchService.shouldStartRound(eq(userId), any())).thenReturn(true);
+        when(matchService.shouldUserStartRound(eq(userId), any())).thenReturn(true);
         when(matchEntityPageMock.getContent()).thenReturn(pageContentMock);
         when(objectMapper.convertValue(eq(pageContentMock), any(TypeReference.class))).thenReturn(matchDTOList);
 
@@ -79,8 +79,8 @@ public class MatchFacadeImplTest {
 
         verify(matchService).getMatchesByUserId(userId, page, pageSize);
         verify(objectMapper).convertValue(eq(pageContentMock), any(TypeReference.class));
-        verify(matchService).shouldStartRound(userId, pageContentMock.get(0));
-        verify(matchService).shouldStartRound(userId, pageContentMock.get(1));
+        verify(matchService).shouldUserStartRound(userId, pageContentMock.get(0));
+        verify(matchService).shouldUserStartRound(userId, pageContentMock.get(1));
         assertEquals(matchDTOList, result.getData());
         assertTrue(matchDTOList.get(0).isShouldStartRound());
         assertTrue(matchDTOList.get(1).isShouldStartRound());

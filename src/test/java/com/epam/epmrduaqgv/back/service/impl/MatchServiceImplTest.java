@@ -190,52 +190,52 @@ public class MatchServiceImplTest {
     }
 
     @Test
-    public void shouldReturnTrueOnShouldStartRound1() {//When no rounds are created yet
+    public void shouldReturnTrueOnShouldUserStartRound1() {//When no rounds are created yet
         MatchEntity matchEntity = createMatchEntity(1, 0, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
         assertTrue(result);
     }
 
     @Test
-    public void shouldReturnTrueOnShouldStartRound2() {//when there is one finished round
+    public void shouldReturnTrueOnShouldUserStartRound2() {//when there is one finished round
         MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
         assertTrue(result);
     }
 
     @Test
-    public void shouldReturnTrueOnShouldStartRound3() {//when every player has created one round
+    public void shouldReturnTrueOnShouldUserStartRound3() {//when every player has created one round
         MatchEntity matchEntity = createMatchEntity(playersInMatch, playersInMatch, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
         assertTrue(result);
     }
 
     @Test
-    public void shouldReturnFalseOnShouldStartRound1() {//when all rounds are played
+    public void shouldReturnFalseOnShouldUserStartRound1() {//when all rounds are played
         MatchEntity matchEntity = createMatchEntity(playersInMatch, roundsInMatch, MATCH_ID);
-        boolean result = matchService.shouldStartRound("no matter", matchEntity);
+        boolean result = matchService.shouldUserStartRound("no matter", matchEntity);
         assertFalse(result);
     }
 
     @Test
-    public void shouldReturnFalseOnShouldStartRound2() {//when there is an unfinished round
+    public void shouldReturnFalseOnShouldUserStartRound2() {//when there is an unfinished round
         MatchEntity matchEntity = createMatchEntity(2, 3, MATCH_ID);
         matchEntity.getRounds().get(2).setRoundState(RoundState.IN_PROGRESS);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
         assertFalse(result);
     }
 
     @Test
-    public void shouldReturnFalseOnShouldStartRound3() {//when it's not your turn
+    public void shouldReturnFalseOnShouldUserStartRound3() {//when it's not your turn
         MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
         assertFalse(result);
     }
 
     @Test
-    public void shouldReturnFalseOnShouldStartRound4() {//when it's not your turn
+    public void shouldReturnFalseOnShouldUserStartRound4() {//when it's not your turn
         MatchEntity matchEntity = createMatchEntity(2, 0, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
         assertFalse(result);
     }
 

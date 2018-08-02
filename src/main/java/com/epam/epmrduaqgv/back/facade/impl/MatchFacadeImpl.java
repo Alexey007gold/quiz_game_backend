@@ -39,7 +39,7 @@ public class MatchFacadeImpl implements MatchFacade {
         List<MatchDTO> matchDTOs = objectMapper.convertValue(matchEntityPage.getContent(),
                 new TypeReference<List<MatchDTO>>(){});
         for (int i = 0; i < matchDTOs.size(); i++) {
-            boolean shouldStartRound = matchService.shouldStartRound(userId, matchEntityPage.getContent().get(i));
+            boolean shouldStartRound = matchService.shouldUserStartRound(userId, matchEntityPage.getContent().get(i));
             matchDTOs.get(i).setShouldStartRound(shouldStartRound);
         }
 
