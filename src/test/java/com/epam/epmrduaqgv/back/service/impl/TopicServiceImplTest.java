@@ -8,10 +8,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.domain.PageRequest;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
@@ -26,7 +25,7 @@ public class TopicServiceImplTest {
     private TopicRepository topicRepository;
 
     @Test
-    public void findAllTopics() {
+    public void shouldCallRepositoryOnFindAllTopics() {
         TopicEntity mock = mock(TopicEntity.class);
         List<TopicEntity> list = Collections.singletonList(mock);
         when(topicRepository.findAll()).thenReturn(list);
@@ -38,7 +37,7 @@ public class TopicServiceImplTest {
     }
 
     @Test
-    public void findTopicById() {
+    public void shouldCallRepositoryOnFindTopicById() {
         TopicEntity mock = mock(TopicEntity.class);
         String id = "id";
         when(topicRepository.findById(id)).thenReturn(Optional.of(mock));
@@ -53,7 +52,7 @@ public class TopicServiceImplTest {
     }
 
     @Test
-    public void findTopicByName() {
+    public void shouldCallRepositoryOnFindTopicByName() {
         TopicEntity mock = mock(TopicEntity.class);
         String name = "topic";
         when(topicRepository.findByName(name)).thenReturn(mock);
@@ -65,5 +64,41 @@ public class TopicServiceImplTest {
 
         assertEquals(name, nameCaptor.getValue());
         assertEquals(mock, result);
+    }
+
+    @Test
+    public void shouldCallRepositoryOnGetRandomTopicsForMatch() {
+        String matchId = "some match id";
+        int quantity = 2;
+        PageRequest pageRequest = PageRequest.of(0, quantity);
+        List<TopicEntity> topicEntityList = getTopicEntityList(quantity);
+        when(topicRepository.getRandomTopicsForMatch(matchId, pageRequest)).thenReturn(topicEntityList);
+
+        List<TopicEntity> result = topicService.getRandomTopicsForMatch(matchId, quantity);
+
+        verify(topicRepository).getRandomTopicsForMatch(matchId, pageRequest);
+        assertEquals(topicEntityList, result);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowAnExceptionOnGetRandomTopicsForMatchIfNotEnoughTopics() {
+        String matchId = "some match id";
+        int quantity = 2;
+        PageRequest pageRequest = PageRequest.of(0, quantity);
+        List<TopicEntity> topicEntityList = getTopicEntityList(quantity - 1);
+        when(topicRepository.getRandomTopicsForMatch(matchId, pageRequest)).thenReturn(topicEntityList);
+
+        List<TopicEntity> result = topicService.getRandomTopicsForMatch(matchId, quantity);
+
+        verify(topicRepository).getRandomTopicsForMatch(matchId, pageRequest);
+        assertEquals(topicEntityList, result);
+    }
+
+    private List<TopicEntity> getTopicEntityList(int quantity) {
+        List<TopicEntity> result = new ArrayList<>();
+        for (int i = 0; i < quantity; i++) {
+            result.add(mock(TopicEntity.class));
+        }
+        return result;
     }
 }

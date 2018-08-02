@@ -1,0 +1,43 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20180726151234" author="Oleksii Kovetskyi">
+        <createTable schemaName="${schema.name}" tableName="rounds">
+            <column name="id" type="varchar(36)" defaultValueComputed="${uuid_function}">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="match_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="topic_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_state" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="fk_round_match_id"
+                                 baseTableSchemaName="${schema.name}" baseTableName="rounds"
+                                 baseColumnNames="match_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="matches"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_round_topic_id"
+                                 baseTableSchemaName="${schema.name}" baseTableName="rounds"
+                                 baseColumnNames="topic_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="topics"
+                                 referencedColumnNames="id"/>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="rounds"
+                             columnNames="match_id, topic_id"
+                             constraintName="unique_match_topic_constraint"/>
+    </changeSet>
+
+</databaseChangeLog>

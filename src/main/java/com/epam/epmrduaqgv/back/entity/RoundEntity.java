@@ -1,6 +1,6 @@
 package com.epam.epmrduaqgv.back.entity;
 
-import com.epam.epmrduaqgv.back.model.MatchState;
+import com.epam.epmrduaqgv.back.model.RoundState;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -18,17 +18,23 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "matches", schema = "qgv")
-public class MatchEntity {
+@Table(name = "rounds", schema = "qgv")
+public class RoundEntity {
 
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id;
 
+    @Column(name = "match_id", nullable = false)
+    private String matchId;
+
+    @Column(name = "topic_id", nullable = false)
+    private String topicId;
+
     @Builder.Default
-    @Column(name = "match_state", nullable = false)
-    private MatchState matchState = MatchState.WAITING_FOR_OPPONENT;
+    @Column(name = "round_state", nullable = false)
+    private RoundState roundState = RoundState.NOT_STARTED;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
@@ -39,12 +45,6 @@ public class MatchEntity {
     private Instant updatedAt;
 
     @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "match_id")
-    @OrderBy("playerNumber ASC")
-    private List<PlayerEntity> players;
-
-    @OneToMany
-    @JoinColumn(name = "match_id")
-    @OrderBy("createdAt ASC")
-    private List<RoundEntity> rounds;
+    @JoinColumn(name = "round_id")
+    List<RoundQuestionEntity> questions;
 }

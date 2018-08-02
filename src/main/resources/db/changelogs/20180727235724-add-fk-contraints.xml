@@ -1,0 +1,20 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20180719150627" author="Oleksii Kovetskyi">
+        <addForeignKeyConstraint baseTableSchemaName="${schema.name}" baseTableName="scores" baseColumnNames="topic_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="topics" referencedColumnNames="id"
+                                 constraintName="fk_score_topic"/>
+        <addForeignKeyConstraint baseTableSchemaName="${schema.name}" baseTableName="scores" baseColumnNames="user_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_score_user"/>
+        <addForeignKeyConstraint baseTableSchemaName="${schema.name}" baseTableName="questions" baseColumnNames="topic_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="topics" referencedColumnNames="id"
+                                 constraintName="fk_question_topic"/>
+
+    </changeSet>
+
+</databaseChangeLog>

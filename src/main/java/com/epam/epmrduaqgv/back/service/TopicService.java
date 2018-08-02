@@ -10,4 +10,6 @@ public interface TopicService {
     TopicEntity findTopicById(String id);
 
     TopicEntity findTopicByName(String id);
+
+    List<TopicEntity> getRandomTopicsForMatch(String matchId, Integer quantity);
 }
