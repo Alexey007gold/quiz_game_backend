@@ -54,4 +54,15 @@ public class MatchController {
 
         return matchFacade.getMatchesByUserId(userId, page, pageSize);
     }
+
+    @PostMapping("/answer")
+    @ApiOperation(value = "Give answer to a question", authorizations = @Authorization(value = "oauth2"))
+    public void giveAnswer(@ApiIgnore OAuth2Authentication oauth,
+                           @RequestParam("roundId") String roundId,
+                           @RequestParam("questionId") String questionId,
+                           @RequestParam("answerId") String answerId) {
+        String userId = ControllerUtils.getUserId(oauth);
+
+        matchFacade.saveAnswer(userId, roundId, questionId, answerId);
+    }
 }

@@ -28,8 +28,8 @@ public class UserServiceImplTest {
 
     private static final String EMAIL = "email";
     private static final String NICK = "testUser";
-    private static final String SCORE_FIELD = "COALESCE(s.score, 0)";
-    private static final String SUM_SCORE_FIELD = "SUM(COALESCE(s.score, 0))";
+    private static final String SCORE_FIELD = "COALESCE(rs.score, 0)";
+    private static final String SUM_SCORE_FIELD = "SUM(COALESCE(rs.score, 0))";
 
     @InjectMocks
     private UserServiceImpl userService;

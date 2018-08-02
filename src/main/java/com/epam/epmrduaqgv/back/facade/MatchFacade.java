@@ -14,4 +14,6 @@ public interface MatchFacade {
     PageDTO<MatchDTO> getMatchesByUserId(String userId, int page, int pageSize);
 
     List<RoundDTO> getRoundsByMatchId(String matchId);
+
+    void saveAnswer(String userId, String roundId, String questionId, String answerId);
 }

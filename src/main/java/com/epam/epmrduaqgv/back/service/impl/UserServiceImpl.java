@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 @PropertySource("classpath:validation/validationMessages.properties")
 public class UserServiceImpl implements UserService {
 
-    private static final String SCORE_FIELD = "COALESCE(s.score, 0)";
-    private static final String SUM_SCORE_FIELD = "SUM(COALESCE(s.score, 0))";
+    private static final String SCORE_FIELD = "COALESCE(rs.score, 0)";
+    private static final String SUM_SCORE_FIELD = "SUM(COALESCE(rs.score, 0))";
 
     @Value("${validation.message.user.email.unavailable}")
     private String EMAIL_USED_MESSAGE;

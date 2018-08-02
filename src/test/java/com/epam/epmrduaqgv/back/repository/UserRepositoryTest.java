@@ -13,6 +13,8 @@ import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 @DataJpaTest
@@ -24,6 +26,12 @@ public class UserRepositoryTest {
 
     @Autowired
     private TopicRepository topicRepository;
+
+    @Autowired
+    private RoundRepository roundRepository;
+
+    @Autowired
+    private MatchRepository matchRepository;
 
     @Test
     public void shouldReturnSavedEntityOnSave() {
@@ -51,64 +59,101 @@ public class UserRepositoryTest {
     }
 
     @Test
-    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_topics.sql", "classpath:sql/add_scores.sql"})
+    @Sql({"classpath:sql/add_topics.sql", "classpath:sql/add_users.sql",
+            "classpath:sql/add_matches.sql", "classpath:sql/add_rounds.sql",
+            "classpath:sql/add_round_scores.sql"})
     public void shouldReturnCorrectResultsOnFindScoresByTopicId() {
         String topicId1 = topicRepository.findByName("Ukraine history").getId();
-        String topicId2 = topicRepository.findByName("General IT").getId();
-        Page<UserDTO> result1 = userRepository.findScoresByTopicId(topicId1, PageRequest.of(0, 7));
-        Page<UserDTO> result2 = userRepository.findScoresByTopicId(topicId1, PageRequest.of(1, 7));
+        String topicId2 = topicRepository.findByName("EPAM in location").getId();
 
-        Page<UserDTO> result3 = userRepository.findScoresByTopicId(topicId2, PageRequest.of(0, 7));
-        Page<UserDTO> result4 = userRepository.findScoresByTopicId(topicId2, PageRequest.of(1, 7));
+        Sort sort = JpaSort.unsafe(Sort.Direction.DESC, "SUM(COALESCE(rs.score, 0))");
+        Page<UserDTO> result1 = userRepository.findScoresByTopicId(topicId1, PageRequest.of(0, 30, sort));
+        Page<UserDTO> result2 = userRepository.findScoresByTopicId(topicId2, PageRequest.of(0, 30, sort));
 
-        Page<UserDTO> result5 = userRepository.findScoresByTopicId("not existent id", PageRequest.of(2, 4));
+        assertEquals(10, result1.getNumberOfElements());
+        assertEquals(10, result2.getNumberOfElements());
 
-        assertEquals(7, result1.getNumberOfElements());
-        assertEquals(3, result2.getNumberOfElements());
-
-        assertEquals(7, result3.getNumberOfElements());
-        assertEquals(3, result4.getNumberOfElements());
-
-        assertEquals(0, result5.getNumberOfElements());
+        assertEquals(9L, (long) result1.getContent().get(0).getScore());
+        assertEquals(3L, (long) result1.getContent().get(1).getScore());
+        assertEquals(6L, (long) result2.getContent().get(0).getScore());
+        assertEquals(6L, (long) result2.getContent().get(1).getScore());
     }
 
     @Test
-    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_topics.sql", "classpath:sql/add_scores.sql"})
+    @Sql({"classpath:sql/add_topics.sql", "classpath:sql/add_users.sql",
+            "classpath:sql/add_matches.sql", "classpath:sql/add_rounds.sql",
+            "classpath:sql/add_round_scores.sql"})
     public void shouldReturnCorrectResultsOnFindScoresByTopicName() {
         String topic1 = "Ukraine history";
-        String topic2 = "General IT";
-        Page<UserDTO> result1 = userRepository.findScoresByTopicName(topic1, PageRequest.of(0, 7));
-        Page<UserDTO> result2 = userRepository.findScoresByTopicName(topic1, PageRequest.of(1, 7));
+        String topic2 = "EPAM in location";
 
-        Page<UserDTO> result3 = userRepository.findScoresByTopicName(topic2, PageRequest.of(0, 7));
-        Page<UserDTO> result4 = userRepository.findScoresByTopicName(topic2, PageRequest.of(1, 7));
+        Sort sort = JpaSort.unsafe(Sort.Direction.DESC, "SUM(COALESCE(rs.score, 0))");
+        Page<UserDTO> result1 = userRepository.findScoresByTopicName(topic1, PageRequest.of(0, 30, sort));
+        Page<UserDTO> result2 = userRepository.findScoresByTopicName(topic2, PageRequest.of(0, 30, sort));
 
-        Page<UserDTO> result5 = userRepository.findScoresByTopicName("not existent name", PageRequest.of(2, 4));
+        assertEquals(10, result1.getNumberOfElements());
+        assertEquals(10, result2.getNumberOfElements());
 
-        assertEquals(7, result1.getNumberOfElements());
-        assertEquals(3, result2.getNumberOfElements());
-
-        assertEquals(7, result3.getNumberOfElements());
-        assertEquals(3, result4.getNumberOfElements());
-
-        assertEquals(0, result5.getNumberOfElements());
+        assertEquals(9L, (long) result1.getContent().get(0).getScore());
+        assertEquals(3L, (long) result1.getContent().get(1).getScore());
+        assertEquals(6L, (long) result2.getContent().get(0).getScore());
+        assertEquals(6L, (long) result2.getContent().get(1).getScore());
     }
 
     @Test
-    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_topics.sql", "classpath:sql/add_scores.sql"})
+    @Sql({"classpath:sql/add_topics.sql", "classpath:sql/add_users.sql",
+            "classpath:sql/add_matches.sql", "classpath:sql/add_rounds.sql",
+            "classpath:sql/add_round_scores.sql"})
     public void shouldReturnCorrectResultsOnFindTotalScores() {
-        Page<UserDTO> result1 = userRepository.findTotalScores(PageRequest.of(0, 4));
-        Page<UserDTO> result2 = userRepository.findTotalScores(PageRequest.of(1, 4));
-        Page<UserDTO> result3 = userRepository.findTotalScores(PageRequest.of(2, 4));
-        Page<UserDTO> result4 = userRepository.findTotalScores(PageRequest.of(0, 20,
-                JpaSort.unsafe(Sort.Direction.DESC, "SUM(s.score)")));
+        Sort sort = JpaSort.unsafe(Sort.Direction.DESC, "SUM(COALESCE(rs.score, 0))");
+        Page<UserDTO> result = userRepository.findTotalScores(PageRequest.of(0, 30, sort));
 
-        assertEquals(4, result1.getNumberOfElements());
-        assertEquals(4, result2.getNumberOfElements());
-        assertEquals(2, result3.getNumberOfElements());
-        assertEquals(10, result4.getNumberOfElements());
+        assertEquals(10, result.getNumberOfElements());
 
-        assertEquals(69, (long) result4.getContent().get(0).getScore());
-        assertEquals("test_user3", result4.getContent().get(0).getNickName());
+        assertEquals(15L, (long) result.getContent().get(0).getScore());
+        assertEquals(9L, (long) result.getContent().get(1).getScore());
+    }
+
+    @Test
+    @Sql({"classpath:sql/add_topics.sql", "classpath:sql/add_users.sql",
+            "classpath:sql/add_matches.sql", "classpath:sql/add_rounds.sql",
+            "classpath:sql/add_round_scores.sql"})
+    public void shouldReturnCorrectResultsOnFindScoresByRoundId() {
+        String roundId1 = roundRepository.findAll().stream()
+                .filter(r -> r.getCreatedAt().toString().equals("2016-06-22T19:10:22Z"))
+                .findFirst().get().getId();
+        String roundId2 = roundRepository.findAll().stream()
+                .filter(r -> r.getCreatedAt().toString().equals("2016-06-22T19:10:20Z"))
+                .findFirst().get().getId();
+
+        Sort sort = JpaSort.unsafe(Sort.Direction.DESC, "SUM(COALESCE(rs.score, 0))");
+        List<UserDTO> result1 = userRepository.findScoresByRoundId(roundId1, sort);
+        List<UserDTO> result2 = userRepository.findScoresByRoundId(roundId2, sort);
+
+        assertEquals(2, result1.size());
+        assertEquals(2, result2.size());
+
+        assertEquals(9L, (long) result1.get(0).getScore());
+        assertEquals(3L, (long) result1.get(1).getScore());
+        assertEquals(6L, (long) result2.get(0).getScore());
+        assertEquals(6L, (long) result2.get(1).getScore());
+    }
+
+    @Test
+    @Sql({"classpath:sql/add_topics.sql", "classpath:sql/add_users.sql",
+            "classpath:sql/add_matches.sql", "classpath:sql/add_rounds.sql",
+            "classpath:sql/add_round_scores.sql"})
+    public void shouldReturnCorrectResultsOnFindScoresByMatchId() {
+        String matchId = matchRepository.findAll().stream()
+                .filter(m -> m.getCreatedAt().toString().equals("2016-06-22T19:10:20Z"))
+                .findFirst().get().getId();
+
+        Sort sort = JpaSort.unsafe(Sort.Direction.DESC, "SUM(COALESCE(rs.score, 0))");
+        List<UserDTO> result = userRepository.findScoresByMatchId(matchId, sort);
+
+        assertEquals(2, result.size());
+
+        assertEquals(15L, (long) result.get(0).getScore());
+        assertEquals(9L, (long) result.get(1).getScore());
     }
 }
