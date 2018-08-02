@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface MatchRepository extends JpaRepository<MatchEntity, String> {
 
     @Query("SELECT m FROM MatchEntity m " +
@@ -16,9 +18,37 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
             "WHERE p.userId = :userId")
     Page<MatchEntity> findByPlayerWithUserId(@Param("userId") String userId, Pageable pageable);
 
+    @Query(value = "SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE p.userId = :userId AND m.matchState = 1" +
+            "GROUP BY m.id " +
+            "HAVING DATEDIFF('millisecond', (SELECT MIN(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)," +
+            "                           (SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)) > :diffMilli")
+    List<MatchEntity> findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(@Param("userId") String userId,
+                                                                                         @Param("diffMilli") Integer diffMilli);
+
+    @Query(value = "SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE m.matchState = 1" +
+            "GROUP BY m.id " +
+            "HAVING DATEDIFF('millisecond', (SELECT MIN(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)," +
+            "                           (SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)) > :diffMilli")
+    List<MatchEntity> findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(@Param("diffMilli") Integer diffMilli);
+
     @Modifying
     @Query("UPDATE MatchEntity m " +
             "SET m.matchState = :matchState " +
             "WHERE m.id = :matchId")
     int updateMatchState(@Param("matchId") String matchId, @Param("matchState") MatchState matchState);
+
+    @Modifying
+    @Query("UPDATE MatchEntity m " +
+            "SET m.matchState = :matchState " +
+            "WHERE m.id IN :matchId")
+    int updateMatchState(@Param("matchId") List<String> matchId, @Param("matchState") MatchState matchState);
+
+    @Query("SELECT m.matchState FROM MatchEntity m " +
+            "JOIN RoundEntity r ON r.matchId = m.id " +
+            "WHERE r.id IN :roundId")
+    MatchState getMatchStateByRoundId(@Param("roundId") String roundId);
 }

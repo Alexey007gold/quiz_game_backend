@@ -4,6 +4,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.time.Instant;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,4 +30,7 @@ public class PlayerEntity {
 
     @Column(name = "player_number", nullable = false)
     private int playerNumber;
+
+    @Column(name = "last_activity_at")
+    private Instant lastActivityAt;
 }
