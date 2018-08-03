@@ -17,5 +17,5 @@ public interface MatchService {
 
     List<RoundDTO> getRoundsByMatchId(String matchId);
 
-    boolean shouldStartRound(String userId, MatchEntity matchEntity);
+    boolean shouldUserStartRound(String userId, MatchEntity matchEntity);
 }

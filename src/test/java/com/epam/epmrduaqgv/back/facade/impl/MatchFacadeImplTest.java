@@ -4,6 +4,7 @@ import com.epam.epmrduaqgv.back.dto.MatchDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
+import com.epam.epmrduaqgv.back.service.AnswerService;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +33,9 @@ public class MatchFacadeImplTest {
 
     @Mock
     private MatchService matchService;
+
+    @Mock
+    private AnswerService answerService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -71,7 +75,7 @@ public class MatchFacadeImplTest {
         int page = 0;
         int pageSize = 5;
         when(matchService.getMatchesByUserId(userId, page, pageSize)).thenReturn(matchEntityPageMock);
-        when(matchService.shouldStartRound(eq(userId), any())).thenReturn(true);
+        when(matchService.shouldUserStartRound(eq(userId), any())).thenReturn(true);
         when(matchEntityPageMock.getContent()).thenReturn(pageContentMock);
         when(objectMapper.convertValue(eq(pageContentMock), any(TypeReference.class))).thenReturn(matchDTOList);
 
@@ -79,8 +83,8 @@ public class MatchFacadeImplTest {
 
         verify(matchService).getMatchesByUserId(userId, page, pageSize);
         verify(objectMapper).convertValue(eq(pageContentMock), any(TypeReference.class));
-        verify(matchService).shouldStartRound(userId, pageContentMock.get(0));
-        verify(matchService).shouldStartRound(userId, pageContentMock.get(1));
+        verify(matchService).shouldUserStartRound(userId, pageContentMock.get(0));
+        verify(matchService).shouldUserStartRound(userId, pageContentMock.get(1));
         assertEquals(matchDTOList, result.getData());
         assertTrue(matchDTOList.get(0).isShouldStartRound());
         assertTrue(matchDTOList.get(1).isShouldStartRound());
@@ -96,6 +100,18 @@ public class MatchFacadeImplTest {
 
         verify(matchService).getRoundsByMatchId(matchId);
         assertEquals(roundDTOList, result);
+    }
+
+    @Test
+    public void shouldCallServiceMethodsOnSaveAnswer() {
+        String userId = "some user id";
+        String roundId = "some round id";
+        String questionId = "some question id";
+        String answerId = "some answer id";
+
+        matchFacade.saveAnswer(userId, roundId, questionId, answerId);
+
+        verify(answerService).saveAnswer(userId, roundId, questionId, answerId);
     }
 
 }

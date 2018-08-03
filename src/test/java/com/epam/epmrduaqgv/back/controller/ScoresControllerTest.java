@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @Sql(scripts = {"classpath:sql/add_user.sql", "classpath:sql/add_users.sql",
-        "classpath:sql/add_topics.sql", "classpath:sql/add_scores.sql"})
+        "classpath:sql/add_topics.sql"})
 public class ScoresControllerTest {
 
     private static final String EMAIL = "test@gmail.com";
