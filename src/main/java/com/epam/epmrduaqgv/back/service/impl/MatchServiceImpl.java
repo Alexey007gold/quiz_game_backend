@@ -53,7 +53,7 @@ public class MatchServiceImpl implements MatchService {
     private ObjectMapper objectMapper;
 
     @Value("${questions_in_round}")
-    private Integer questionInRound;
+    private Integer questionsInRound;
 
     @Value("${rounds_in_match}")
     private Integer roundsInMatch;
@@ -118,7 +118,7 @@ public class MatchServiceImpl implements MatchService {
     public RoundDTO createRound(String userId, String matchId, String topicId) {
         MatchEntity matchEntity = matchRepository.findById(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("Match not found"));
-        checkIfCanCreateRound(userId, matchEntity);
+        checkIfUserCanCreateRound(userId, matchEntity);
 
         RoundEntity roundEntity = RoundEntity.builder()
                 .matchId(matchId)
@@ -126,7 +126,7 @@ public class MatchServiceImpl implements MatchService {
                 .build();
         roundRepository.save(roundEntity);
 
-        List<QuestionEntity> questions = inMemoryQuestionServiceImpl.findRandomQuestionsByTopicId(topicId, questionInRound);
+        List<QuestionEntity> questions = inMemoryQuestionServiceImpl.findRandomQuestionsByTopicId(topicId, questionsInRound);
         List<RoundQuestionEntity> roundQuestionEntityList = questions.stream()
                 .map(questionEntity -> RoundQuestionEntity.builder()
                         .roundId(roundEntity.getId())
@@ -152,9 +152,9 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public boolean shouldStartRound(String userId, MatchEntity matchEntity) {
+    public boolean shouldUserStartRound(String userId, MatchEntity matchEntity) {
         List<RoundEntity> rounds = matchEntity.getRounds();
-        if (rounds.size() == roundsInMatch) {
+        if (rounds.size() >= roundsInMatch) {
             return false;
         }
         if (!rounds.isEmpty() && !rounds.get(rounds.size() - 1).getRoundState().equals(RoundState.FINISHED)) {
@@ -165,9 +165,9 @@ public class MatchServiceImpl implements MatchService {
     }
 
 
-    private void checkIfCanCreateRound(String userId, MatchEntity matchEntity) {
+    private void checkIfUserCanCreateRound(String userId, MatchEntity matchEntity) {
         List<RoundEntity> rounds = matchEntity.getRounds();
-        if (rounds.size() == roundsInMatch) {
+        if (rounds.size() >= roundsInMatch) {
             throw new IllegalStateException("No more rounds can be created for this match");
         }
         if (!rounds.isEmpty() && !rounds.get(rounds.size() - 1).getRoundState().equals(RoundState.FINISHED)) {

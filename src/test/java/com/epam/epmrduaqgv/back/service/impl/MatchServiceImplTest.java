@@ -1,6 +1,7 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
+import com.epam.epmrduaqgv.back.dto.QuestionDTO;
 import com.epam.epmrduaqgv.back.entity.*;
 import com.epam.epmrduaqgv.back.model.MatchState;
 import com.epam.epmrduaqgv.back.model.RoundState;
@@ -57,7 +58,7 @@ public class MatchServiceImplTest {
     @Mock
     private ObjectMapper objectMapper;
 
-    private Integer questionInRound;
+    private Integer questionsInRound;
 
     private Integer roundsInMatch;
 
@@ -68,11 +69,11 @@ public class MatchServiceImplTest {
 
     @Before
     public void setUp() {
-        questionInRound = 5;
+        questionsInRound = 5;
         roundsInMatch = 5;
         playersInMatch = 3;
         maxMatchesInProgress = 5;
-        ReflectionTestUtils.setField(matchService, "questionInRound", questionInRound);
+        ReflectionTestUtils.setField(matchService, "questionsInRound", questionsInRound);
         ReflectionTestUtils.setField(matchService, "roundsInMatch", roundsInMatch);
         ReflectionTestUtils.setField(matchService, "playersInMatch", playersInMatch);
         ReflectionTestUtils.setField(matchService, "maxMatchesInProgress", maxMatchesInProgress);
@@ -118,7 +119,6 @@ public class MatchServiceImplTest {
         assertNotEquals(matchEntityArgument.getCreatedAt(), matchEntityArgument.getUpdatedAt());
 
         assertEquals(3, playerEntityArgument.getPlayerNumber());
-        assertEquals(0, playerEntityArgument.getPoints());
         assertEquals(matchEntity.getId(), playerEntityArgument.getMatchId());
         assertEquals(userId, playerEntityArgument.getUserId());
         assertEquals(listMock, result.getPlayers());
@@ -166,7 +166,6 @@ public class MatchServiceImplTest {
         assertEquals(matchEntityArgument.getCreatedAt(), matchEntityArgument.getUpdatedAt());
 
         assertEquals(1, playerEntityArgument.getPlayerNumber());
-        assertEquals(0, playerEntityArgument.getPoints());
         assertEquals(matchEntity.getId(), playerEntityArgument.getMatchId());
         assertEquals(userId, playerEntityArgument.getUserId());
         assertEquals(listMock, result.getPlayers());
@@ -212,8 +211,9 @@ public class MatchServiceImplTest {
 
     @Test
     public void shouldCallRepositoryMethodOnCreateRound1() {//When no rounds are created yet
+        when(objectMapper.convertValue(any(), any(TypeReference.class)))
+                .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
-        when(objectMapper.convertValue(any(), any(TypeReference.class))).thenReturn(Collections.emptyList());
 
         MatchEntity matchEntity = createMatchEntity(1, 0, MATCH_ID);
         createRoundFlow(matchEntity, matchEntity.getPlayers().get(0).getUserId(), MATCH_ID);
@@ -221,8 +221,9 @@ public class MatchServiceImplTest {
 
     @Test
     public void shouldCallRepositoryMethodOnCreateRound2() {//when there is one finished round
+        when(objectMapper.convertValue(any(), any(TypeReference.class)))
+                .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
-        when(objectMapper.convertValue(any(), any(TypeReference.class))).thenReturn(Collections.emptyList());
 
         MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
         createRoundFlow(matchEntity, matchEntity.getPlayers().get(1).getUserId(), MATCH_ID);
@@ -230,8 +231,9 @@ public class MatchServiceImplTest {
 
     @Test
     public void shouldCallRepositoryMethodOnCreateRound3() {//when every player has created one round
+        when(objectMapper.convertValue(any(), any(TypeReference.class)))
+                .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
-        when(objectMapper.convertValue(any(), any(TypeReference.class))).thenReturn(Collections.emptyList());
 
         MatchEntity matchEntity = createMatchEntity(playersInMatch, playersInMatch, MATCH_ID);
         createRoundFlow(matchEntity, matchEntity.getPlayers().get(0).getUserId(), MATCH_ID);
@@ -263,52 +265,52 @@ public class MatchServiceImplTest {
     }
 
     @Test
-    public void shouldReturnTrueOnShouldStartRound1() {//When no rounds are created yet
+    public void shouldReturnTrueOnShouldUserStartRound1() {//When no rounds are created yet
         MatchEntity matchEntity = createMatchEntity(1, 0, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
         assertTrue(result);
     }
 
     @Test
-    public void shouldReturnTrueOnShouldStartRound2() {//when there is one finished round
+    public void shouldReturnTrueOnShouldUserStartRound2() {//when there is one finished round
         MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
         assertTrue(result);
     }
 
     @Test
-    public void shouldReturnTrueOnShouldStartRound3() {//when every player has created one round
+    public void shouldReturnTrueOnShouldUserStartRound3() {//when every player has created one round
         MatchEntity matchEntity = createMatchEntity(playersInMatch, playersInMatch, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
         assertTrue(result);
     }
 
     @Test
-    public void shouldReturnFalseOnShouldStartRound1() {//when all rounds are played
+    public void shouldReturnFalseOnShouldUserStartRound1() {//when all rounds are played
         MatchEntity matchEntity = createMatchEntity(playersInMatch, roundsInMatch, MATCH_ID);
-        boolean result = matchService.shouldStartRound("no matter", matchEntity);
+        boolean result = matchService.shouldUserStartRound("no matter", matchEntity);
         assertFalse(result);
     }
 
     @Test
-    public void shouldReturnFalseOnShouldStartRound2() {//when there is an unfinished round
+    public void shouldReturnFalseOnShouldUserStartRound2() {//when there is an unfinished round
         MatchEntity matchEntity = createMatchEntity(2, 3, MATCH_ID);
         matchEntity.getRounds().get(2).setRoundState(RoundState.IN_PROGRESS);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
         assertFalse(result);
     }
 
     @Test
-    public void shouldReturnFalseOnShouldStartRound3() {//when it's not your turn
+    public void shouldReturnFalseOnShouldUserStartRound3() {//when it's not your turn
         MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(0).getUserId(), matchEntity);
         assertFalse(result);
     }
 
     @Test
-    public void shouldReturnFalseOnShouldStartRound4() {//when it's not your turn
+    public void shouldReturnFalseOnShouldUserStartRound4() {//when it's not your turn
         MatchEntity matchEntity = createMatchEntity(2, 0, MATCH_ID);
-        boolean result = matchService.shouldStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
         assertFalse(result);
     }
 
@@ -342,8 +344,8 @@ public class MatchServiceImplTest {
             argument.setId(round_id);
             return argument;
         });
-        List<QuestionEntity> questionEntityList = getQuestionEntityList(questionInRound);
-        when(questionService.findRandomQuestionsByTopicId(topicId, questionInRound)).thenReturn(questionEntityList);
+        List<QuestionEntity> questionEntityList = getQuestionEntityList(questionsInRound);
+        when(questionService.findRandomQuestionsByTopicId(topicId, questionsInRound)).thenReturn(questionEntityList);
         when(matchRepository.findById(matchId)).thenReturn(Optional.of(matchEntity));
 
         matchService.createRound(userId, matchId, topicId);
@@ -352,7 +354,7 @@ public class MatchServiceImplTest {
         ArgumentCaptor<List> roundQuestionListArgumentCaptor = ArgumentCaptor.forClass(List.class);
         verify(matchRepository).findById(matchId);
         verify(roundRepository).save(roundEntityArgumentCaptor.capture());
-        verify(questionService).findRandomQuestionsByTopicId(topicId, questionInRound);
+        verify(questionService).findRandomQuestionsByTopicId(topicId, questionsInRound);
         verify(roundQuestionRepository).saveAll(roundQuestionListArgumentCaptor.capture());
 
         RoundEntity roundEntityArgument = roundEntityArgumentCaptor.getValue();
@@ -386,5 +388,13 @@ public class MatchServiceImplTest {
                     .build());
         }
         return result;
+    }
+
+    private Object getQuestionDTOList(int quantity) {
+        List<QuestionDTO> questionDTOList = new ArrayList<>(quantity);
+        for (int i = 0; i < quantity; i++) {
+            questionDTOList.add(mock(QuestionDTO.class));
+        }
+        return questionDTOList;
     }
 }

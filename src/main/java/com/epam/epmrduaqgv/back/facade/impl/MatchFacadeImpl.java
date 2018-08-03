@@ -5,6 +5,7 @@ import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
 import com.epam.epmrduaqgv.back.facade.MatchFacade;
+import com.epam.epmrduaqgv.back.service.AnswerService;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +20,9 @@ public class MatchFacadeImpl implements MatchFacade {
 
     @Autowired
     private MatchService matchService;
+
+    @Autowired
+    private AnswerService answerService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -39,7 +43,7 @@ public class MatchFacadeImpl implements MatchFacade {
         List<MatchDTO> matchDTOs = objectMapper.convertValue(matchEntityPage.getContent(),
                 new TypeReference<List<MatchDTO>>(){});
         for (int i = 0; i < matchDTOs.size(); i++) {
-            boolean shouldStartRound = matchService.shouldStartRound(userId, matchEntityPage.getContent().get(i));
+            boolean shouldStartRound = matchService.shouldUserStartRound(userId, matchEntityPage.getContent().get(i));
             matchDTOs.get(i).setShouldStartRound(shouldStartRound);
         }
 
@@ -50,5 +54,10 @@ public class MatchFacadeImpl implements MatchFacade {
     @Override
     public List<RoundDTO> getRoundsByMatchId(String matchId) {
         return matchService.getRoundsByMatchId(matchId);
+    }
+
+    @Override
+    public void saveAnswer(String userId, String roundId, String questionId, String answerId) {
+        answerService.saveAnswer(userId, roundId, questionId, answerId);
     }
 }
