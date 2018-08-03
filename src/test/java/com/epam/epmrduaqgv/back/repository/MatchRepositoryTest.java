@@ -38,7 +38,7 @@ public class MatchRepositoryTest {
 
         Instant updatedTime = matchEntity.getUpdatedAt();
 
-        matchEntity.setUpdatedAt(Instant.now());
+        matchEntity.setUpdatedAt(Instant.MAX);
         matchRepository.saveAndFlush(matchEntity);
 
         assertNotEquals(updatedTime, matchEntity.getUpdatedAt());
