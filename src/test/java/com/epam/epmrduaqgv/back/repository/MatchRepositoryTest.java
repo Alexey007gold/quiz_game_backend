@@ -13,10 +13,10 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
-import static com.epam.epmrduaqgv.back.model.MatchState.FINISHED;
-import static com.epam.epmrduaqgv.back.model.MatchState.IN_PROGRESS;
+import static com.epam.epmrduaqgv.back.model.MatchState.*;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 
@@ -122,6 +122,20 @@ public class MatchRepositoryTest {
         int result = matchRepository.updateMatchState(matchIds, FINISHED);
 
         assertEquals(2, result);
+    }
+
+    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql"})
+    @Test
+    public void shouldReturnCorrectResultsOnFindByPlayerWithUserIdAndMatchStateIn() {
+        String userId = userRepository.findByEmail("test1@gmail.com").getId();
+
+        List<MatchEntity> result1 = matchRepository.findByPlayerWithUserIdAndMatchStateIn(userId,
+                Arrays.asList(WAITING_FOR_OPPONENT, IN_PROGRESS));
+        List<MatchEntity> result2 = matchRepository.findByPlayerWithUserIdAndMatchStateIn(userId,
+                Arrays.asList(FINISHED));
+
+        assertEquals(4, result1.size());
+        assertEquals(1, result2.size());
     }
 
     @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql"})

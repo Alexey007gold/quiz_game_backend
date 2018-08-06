@@ -18,6 +18,24 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
             "WHERE p.userId = :userId")
     Page<MatchEntity> findByPlayerWithUserId(@Param("userId") String userId, Pageable pageable);
 
+    @Query("SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE p.userId = :userId AND m.matchState IN :matchState")
+    List<MatchEntity> findByPlayerWithUserIdAndMatchStateIn(@Param("userId") String userId,
+                                                            @Param("matchState") List<MatchState> matchStateList);
+
+    @Query("SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE p.userId = :userId AND m.matchState NOT IN :matchState")
+    List<MatchEntity> findByPlayerWithUserIdAndMatchStateNotIn(@Param("userId") String userId,
+                                                            @Param("matchState") List<MatchState> matchStateList);
+
+    @Query("SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE p.userId = :userId AND m.matchState != :matchState")
+    List<MatchEntity> findByPlayerWithUserIdAndMatchStateNot(@Param("userId") String userId,
+                                                            @Param("matchState") MatchState matchState);
+
     @Query(value = "SELECT m FROM MatchEntity m " +
             "JOIN PlayerEntity p ON p.matchId = m.id " +
             "WHERE p.userId = :userId AND m.matchState = 1" +

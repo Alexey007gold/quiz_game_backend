@@ -64,6 +64,8 @@ public class MatchServiceImplTest {
 
     private Integer playersInMatch;
 
+    private Integer maxMatchesInProgress;
+
     private Integer maxPlayerInactivityMs;
 
 
@@ -72,10 +74,12 @@ public class MatchServiceImplTest {
         questionsInRound = 5;
         roundsInMatch = 5;
         playersInMatch = 3;
+        maxMatchesInProgress = 5;
         maxPlayerInactivityMs = 300000;
         ReflectionTestUtils.setField(matchService, "questionsInRound", questionsInRound);
         ReflectionTestUtils.setField(matchService, "roundsInMatch", roundsInMatch);
         ReflectionTestUtils.setField(matchService, "playersInMatch", playersInMatch);
+        ReflectionTestUtils.setField(matchService, "maxMatchesInProgress", maxMatchesInProgress);
         ReflectionTestUtils.setField(matchService, "maxPlayerInactivityMs", maxPlayerInactivityMs);
     }
 
@@ -90,6 +94,7 @@ public class MatchServiceImplTest {
                 .updatedAt(Instant.now())
                 .players(Arrays.asList(mock(PlayerEntity.class), mock(PlayerEntity.class)))
                 .build();
+        when(matchRepository.findByPlayerWithUserIdAndMatchStateNot(any(), any())).thenReturn(Collections.emptyList());
         when(matchRepository.findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId(eq((long) playersInMatch), any()))
                 .thenReturn(Collections.singletonList(matchEntity));
         when(matchRepository.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -137,6 +142,7 @@ public class MatchServiceImplTest {
                 .players(Arrays.asList(mock(PlayerEntity.class), mock(PlayerEntity.class)))
                 .build();
         List listMock = mock(List.class);
+        when(matchRepository.findByPlayerWithUserIdAndMatchStateNot(any(), any())).thenReturn(Collections.emptyList());
         when(matchRepository.findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId(eq((long) playersInMatch), any()))
                 .thenReturn(Collections.emptyList());
         when(matchRepository.save(any())).thenReturn(matchEntity);
@@ -169,6 +175,17 @@ public class MatchServiceImplTest {
         assertEquals(listMock, result.getPlayers());
 
         assertTrue(result.isShouldStartRound());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowExceptionOnGetMatchForUser() {
+        String userId = "some user id";
+
+        List listMock = mock(List.class);
+        when(listMock.size()).thenReturn(maxMatchesInProgress);
+        when(matchRepository.findByPlayerWithUserIdAndMatchStateNot(any(), any())).thenReturn(listMock);
+
+        matchService.getMatchForUser(userId);
     }
 
     @Test

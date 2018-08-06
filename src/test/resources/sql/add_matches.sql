@@ -13,10 +13,10 @@ VALUES('testPlayer1', (SELECT id from qgv.users u WHERE u.email = 'test1@gmail.c
 
       (random_uuid(), (SELECT id from qgv.users u WHERE u.email = 'test2@gmail.com'), (SELECT id from qgv.matches m WHERE m.created_at = '2016-06-22T19:10:21Z'), 1, '2016-06-22T19:10:20Z'),
 
-      (random_uuid(), (SELECT id from qgv.users u WHERE u.email = 'test2@gmail.com'), (SELECT id from qgv.matches m WHERE m.created_at = '2016-06-22T19:10:22Z'), 1, '2016-06-22T19:05:20Z'),
+      ('testPlayer2', (SELECT id from qgv.users u WHERE u.email = 'test2@gmail.com'), (SELECT id from qgv.matches m WHERE m.created_at = '2016-06-22T19:10:22Z'), 1, '2016-06-22T19:05:20Z'),
       (random_uuid(), (SELECT id from qgv.users u WHERE u.email = 'test4@gmail.com'), (SELECT id from qgv.matches m WHERE m.created_at = '2016-06-22T19:10:22Z'), 2, '2016-06-22T19:10:20Z'),
 
-      ('testPlayer2', (SELECT id from qgv.users u WHERE u.email = 'test1@gmail.com'), (SELECT id from qgv.matches m WHERE m.created_at = '2016-06-22T19:10:23Z'), 1, '2016-06-22T19:10:20Z'),
+      (random_uuid(), (SELECT id from qgv.users u WHERE u.email = 'test1@gmail.com'), (SELECT id from qgv.matches m WHERE m.created_at = '2016-06-22T19:10:23Z'), 1, '2016-06-22T19:10:20Z'),
       (random_uuid(), (SELECT id from qgv.users u WHERE u.email = 'test2@gmail.com'), (SELECT id from qgv.matches m WHERE m.created_at = '2016-06-22T19:10:23Z'), 2, '2016-06-22T19:09:20Z'),
 
 
