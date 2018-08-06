@@ -1,5 +1,6 @@
 package com.epam.epmrduaqgv.back.facade.impl;
 
+import com.epam.epmrduaqgv.back.aspect.annotation.Retryable;
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
@@ -10,6 +11,7 @@ import com.epam.epmrduaqgv.back.service.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +30,10 @@ public class MatchFacadeImpl implements MatchFacade {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Retryable(retryForExceptions = DataIntegrityViolationException.class)
     @Transactional
     @Override
-    public synchronized MatchDTO getMatchForUser(String userId) {
+    public MatchDTO getMatchForUser(String userId) {
         matchService.finishInactiveMatchesForUser(userId);
         return matchService.getMatchForUser(userId);
     }
