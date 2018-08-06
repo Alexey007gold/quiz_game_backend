@@ -41,14 +41,14 @@ public class MatchFacadeImplTest {
     private ObjectMapper objectMapper;
 
     @Test
-    public void shouldCallServicesOnCreateMatch() {
+    public void shouldCallServicesOnGetMatchForUser() {
         MatchDTO matchDTO = MatchDTO.builder().build();
         String userId = "some user id";
-        when(matchService.createMatch(userId)).thenReturn(matchDTO);
+        when(matchService.getMatchForUser(userId)).thenReturn(matchDTO);
 
-        MatchDTO result = matchFacade.createMatch(userId);
+        MatchDTO result = matchFacade.getMatchForUser(userId);
 
-        verify(matchService).createMatch(userId);
+        verify(matchService).getMatchForUser(userId);
         verify(matchService).finishInactiveMatchesForUser(userId);
         assertEquals(matchDTO, result);
     }

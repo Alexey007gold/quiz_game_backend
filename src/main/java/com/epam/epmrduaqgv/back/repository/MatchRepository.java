@@ -35,6 +35,20 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
             "                           (SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)) > :diffMilli")
     List<MatchEntity> findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(@Param("diffMilli") Integer diffMilli);
 
+    @Query("SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "GROUP BY m.id " +
+            "HAVING COUNT(p.id) < :playersNumber")
+    List<MatchEntity> findWithPlayersNumberLessThan(@Param("playersNumber") Long playersNumber);
+
+    @Query("SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE ((SELECT COUNT(p) FROM PlayerEntity p WHERE p.matchId = m.id) < :playersNumber) AND " +
+            "   :userId NOT IN (SELECT p.userId FROM PlayerEntity p WHERE p.matchId = m.id) " +
+            "GROUP BY m.id ")
+    List<MatchEntity> findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId(@Param("playersNumber") Long playersNumber,
+                                                                                   @Param("userId") String userId);
+
     @Modifying
     @Query("UPDATE MatchEntity m " +
             "SET m.matchState = :matchState " +

@@ -80,32 +80,93 @@ public class MatchServiceImplTest {
     }
 
     @Test
-    public void shouldCallRepositoriesWithCorrectArgsOnCreateMatch() {
-        String id = "id";
+    public void shouldCallRepositoriesWithCorrectArgsAndJoinPlayerOnGetMatchForUser() {
+        String matchId = "some match id";
+        String newPlayerId = "player id";
         String userId = "some user id";
         MatchEntity matchEntity = MatchEntity.builder()
-                .id(id).createdAt(Instant.now()).updatedAt(Instant.now())
+                .id(matchId)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .players(Arrays.asList(mock(PlayerEntity.class), mock(PlayerEntity.class)))
                 .build();
+        when(matchRepository.findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId(eq((long) playersInMatch), any()))
+                .thenReturn(Collections.singletonList(matchEntity));
+        when(matchRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(playerRepository.save(any())).then(invocation -> {
+            PlayerEntity argument = invocation.getArgument(0);
+            argument.setId(newPlayerId);
+            return argument;
+        });
+        List listMock = mock(List.class);
+        when(objectMapper.convertValue(any(), any(TypeReference.class))).thenAnswer(i -> listMock);
+        when(objectMapper.convertValue(any(), eq(MatchDTO.class))).thenAnswer(i -> MatchDTO.builder().build());
+
+        MatchDTO result = matchService.getMatchForUser(userId);
+
+        ArgumentCaptor<MatchEntity> matchEntityCaptor = ArgumentCaptor.forClass(MatchEntity.class);
+        ArgumentCaptor<PlayerEntity> playerEntityCaptor = ArgumentCaptor.forClass(PlayerEntity.class);
+        verify(matchRepository).findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId(eq((long) playersInMatch), any());
+        verify(matchRepository).save(matchEntityCaptor.capture());
+        verify(playerRepository).save(playerEntityCaptor.capture());
+
+        MatchEntity matchEntityArgument = matchEntityCaptor.getValue();
+        PlayerEntity playerEntityArgument = playerEntityCaptor.getValue();
+
+        assertEquals(MatchState.IN_PROGRESS, matchEntityArgument.getMatchState());
+        assertEquals(matchId, matchEntityArgument.getId());
+        assertNotEquals(matchEntityArgument.getCreatedAt(), matchEntityArgument.getUpdatedAt());
+
+        assertEquals(3, playerEntityArgument.getPlayerNumber());
+        assertEquals(matchEntity.getId(), playerEntityArgument.getMatchId());
+        assertEquals(userId, playerEntityArgument.getUserId());
+        assertEquals(listMock, result.getPlayers());
+
+        assertFalse(result.isShouldStartRound());
+    }
+
+    @Test
+    public void shouldCallRepositoriesWithCorrectArgsAndCreateANewMatchOnGetMatchForUser() {
+        String matchId = "some match id";
+        String newPlayerId = "player id";
+        String userId = "some user id";
+        MatchEntity matchEntity = MatchEntity.builder()
+                .id(matchId)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .players(Arrays.asList(mock(PlayerEntity.class), mock(PlayerEntity.class)))
+                .build();
+        List listMock = mock(List.class);
+        when(matchRepository.findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId(eq((long) playersInMatch), any()))
+                .thenReturn(Collections.emptyList());
         when(matchRepository.save(any())).thenReturn(matchEntity);
         when(playerRepository.save(any())).then(invocation -> {
             PlayerEntity argument = invocation.getArgument(0);
-            argument.setId(id);
+            argument.setId(newPlayerId);
             return argument;
         });
-        when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
+        when(objectMapper.convertValue(any(), any(TypeReference.class))).thenAnswer(i -> listMock);
         when(objectMapper.convertValue(any(), eq(MatchDTO.class))).thenAnswer(i -> MatchDTO.builder().build());
 
-        MatchDTO result = matchService.createMatch(userId);
+        MatchDTO result = matchService.getMatchForUser(userId);
 
+        ArgumentCaptor<MatchEntity> matchEntityCaptor = ArgumentCaptor.forClass(MatchEntity.class);
         ArgumentCaptor<PlayerEntity> playerEntityCaptor = ArgumentCaptor.forClass(PlayerEntity.class);
-        verify(matchRepository).save(any());
+        verify(matchRepository).findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId(eq((long) playersInMatch), any());
+        verify(matchRepository).save(matchEntityCaptor.capture());
         verify(playerRepository).save(playerEntityCaptor.capture());
 
+        MatchEntity matchEntityArgument = matchEntityCaptor.getValue();
         PlayerEntity playerEntityArgument = playerEntityCaptor.getValue();
+
+        assertEquals(MatchState.WAITING_FOR_OPPONENT, matchEntityArgument.getMatchState());
+        assertNull(matchEntityArgument.getId());
+        assertEquals(matchEntityArgument.getCreatedAt(), matchEntityArgument.getUpdatedAt());
+
         assertEquals(1, playerEntityArgument.getPlayerNumber());
         assertEquals(matchEntity.getId(), playerEntityArgument.getMatchId());
         assertEquals(userId, playerEntityArgument.getUserId());
-        assertEquals(1, result.getPlayers().size());
+        assertEquals(listMock, result.getPlayers());
 
         assertTrue(result.isShouldStartRound());
     }

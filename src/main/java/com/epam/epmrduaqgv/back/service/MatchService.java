@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface MatchService {
 
-    MatchDTO createMatch(String userId);
+    MatchDTO getMatchForUser(String userId);
 
     RoundDTO createRound(String userId, String matchId, String topicId);
 

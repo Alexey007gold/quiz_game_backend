@@ -7,7 +7,7 @@ import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import java.util.List;
 
 public interface MatchFacade {
-    MatchDTO createMatch(String userId);
+    MatchDTO getMatchForUser(String userId);
 
     RoundDTO createRound(String userId, String matchId, String topicId);
 
