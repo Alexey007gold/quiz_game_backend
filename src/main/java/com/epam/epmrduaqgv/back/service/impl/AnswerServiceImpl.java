@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -64,6 +65,10 @@ public class AnswerServiceImpl implements AnswerService {
         if (!answerEntity.getQuestionId().equals(questionId)) {
             throw new IllegalArgumentException("The question has no answer with such id");
         }
+        MatchState matchState = matchRepository.getMatchStateByRoundId(roundId);
+        if (matchState.equals(MatchState.FINISHED)) {
+            throw new IllegalStateException("Match is already finished. Probably you time is out");
+        }
 
         PlayersAnswersEntity playersAnswersEntity = PlayersAnswersEntity.builder()
                 .roundId(roundId)
@@ -71,6 +76,9 @@ public class AnswerServiceImpl implements AnswerService {
                 .answerId(answerId)
                 .build();
         playersAnswersRepository.save(playersAnswersEntity);
+
+        playerEntity.setLastActivityAt(Instant.now());
+        playerRepository.save(playerEntity);
 
         if (answerEntity.isCorrect()) {
             updateScore(roundId, playerEntity.getId());

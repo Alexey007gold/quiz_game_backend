@@ -18,4 +18,8 @@ public interface MatchService {
     List<RoundDTO> getRoundsByMatchId(String matchId);
 
     boolean shouldUserStartRound(String userId, MatchEntity matchEntity);
+
+    void finishAllInactiveMatches();
+
+    void finishInactiveMatchesForUser(String userId);
 }

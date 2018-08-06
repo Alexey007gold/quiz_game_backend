@@ -69,7 +69,6 @@ public class RoundRepositoryTest {
                 .findFirst().get().getId();
 
         int result = roundRepository.updateRoundState(roundId, RoundState.IN_PROGRESS);
-        roundRepository.flush();
 
         assertEquals(1, result);
     }

@@ -49,6 +49,7 @@ public class MatchFacadeImplTest {
         MatchDTO result = matchFacade.getMatchForUser(userId);
 
         verify(matchService).getMatchForUser(userId);
+        verify(matchService).finishInactiveMatchesForUser(userId);
         assertEquals(matchDTO, result);
     }
 
@@ -81,6 +82,7 @@ public class MatchFacadeImplTest {
 
         PageDTO<MatchDTO> result = matchFacade.getMatchesByUserId(userId, page, pageSize);
 
+        verify(matchService).finishInactiveMatchesForUser(userId);
         verify(matchService).getMatchesByUserId(userId, page, pageSize);
         verify(objectMapper).convertValue(eq(pageContentMock), any(TypeReference.class));
         verify(matchService).shouldUserStartRound(userId, pageContentMock.get(0));
@@ -111,6 +113,7 @@ public class MatchFacadeImplTest {
 
         matchFacade.saveAnswer(userId, roundId, questionId, answerId);
 
+        verify(matchService).finishInactiveMatchesForUser(userId);
         verify(answerService).saveAnswer(userId, roundId, questionId, answerId);
     }
 
