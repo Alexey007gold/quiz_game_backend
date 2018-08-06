@@ -114,7 +114,6 @@ public class MatchServiceImplTest {
         assertNotEquals(matchEntityArgument.getCreatedAt(), matchEntityArgument.getUpdatedAt());
 
         assertEquals(3, playerEntityArgument.getPlayerNumber());
-        assertEquals(0, playerEntityArgument.getPoints());
         assertEquals(matchEntity.getId(), playerEntityArgument.getMatchId());
         assertEquals(userId, playerEntityArgument.getUserId());
         assertEquals(listMock, result.getPlayers());
@@ -198,7 +197,6 @@ public class MatchServiceImplTest {
         when(objectMapper.convertValue(any(), any(TypeReference.class)))
                 .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
-        when(objectMapper.convertValue(any(), any(TypeReference.class))).thenReturn(Collections.emptyList());
 
         MatchEntity matchEntity = createMatchEntity(1, 0, MATCH_ID);
         createRoundFlow(matchEntity, matchEntity.getPlayers().get(0).getUserId(), MATCH_ID);
@@ -209,7 +207,6 @@ public class MatchServiceImplTest {
         when(objectMapper.convertValue(any(), any(TypeReference.class)))
                 .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
-        when(objectMapper.convertValue(any(), any(TypeReference.class))).thenReturn(Collections.emptyList());
 
         MatchEntity matchEntity = createMatchEntity(2, 1, MATCH_ID);
         createRoundFlow(matchEntity, matchEntity.getPlayers().get(1).getUserId(), MATCH_ID);
@@ -220,7 +217,6 @@ public class MatchServiceImplTest {
         when(objectMapper.convertValue(any(), any(TypeReference.class)))
                 .thenAnswer(inv -> getQuestionDTOList(questionsInRound));
         when(objectMapper.convertValue(any(), any(Class.class))).thenAnswer(i -> mock(i.getArgument(1)));
-        when(objectMapper.convertValue(any(), any(TypeReference.class))).thenReturn(Collections.emptyList());
 
         MatchEntity matchEntity = createMatchEntity(playersInMatch, playersInMatch, MATCH_ID);
         createRoundFlow(matchEntity, matchEntity.getPlayers().get(0).getUserId(), MATCH_ID);
