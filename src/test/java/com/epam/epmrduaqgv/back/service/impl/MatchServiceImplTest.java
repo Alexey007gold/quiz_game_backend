@@ -3,11 +3,9 @@ package com.epam.epmrduaqgv.back.service.impl;
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
 import com.epam.epmrduaqgv.back.dto.QuestionDTO;
 import com.epam.epmrduaqgv.back.entity.*;
+import com.epam.epmrduaqgv.back.model.MatchState;
 import com.epam.epmrduaqgv.back.model.RoundState;
-import com.epam.epmrduaqgv.back.repository.MatchRepository;
-import com.epam.epmrduaqgv.back.repository.PlayerRepository;
-import com.epam.epmrduaqgv.back.repository.RoundQuestionRepository;
-import com.epam.epmrduaqgv.back.repository.RoundRepository;
+import com.epam.epmrduaqgv.back.repository.*;
 import com.epam.epmrduaqgv.back.service.QuestionService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,10 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,6 +53,9 @@ public class MatchServiceImplTest {
     private RoundQuestionRepository roundQuestionRepository;
 
     @Mock
+    private RoundScoresRepository roundScoresRepository;
+
+    @Mock
     private ObjectMapper objectMapper;
 
     private Integer questionsInRound;
@@ -66,15 +64,19 @@ public class MatchServiceImplTest {
 
     private Integer playersInMatch;
 
+    private Integer maxPlayerInactivityMs;
+
 
     @Before
     public void setUp() {
         questionsInRound = 5;
         roundsInMatch = 5;
         playersInMatch = 3;
+        maxPlayerInactivityMs = 300000;
         ReflectionTestUtils.setField(matchService, "questionsInRound", questionsInRound);
         ReflectionTestUtils.setField(matchService, "roundsInMatch", roundsInMatch);
         ReflectionTestUtils.setField(matchService, "playersInMatch", playersInMatch);
+        ReflectionTestUtils.setField(matchService, "maxPlayerInactivityMs", maxPlayerInactivityMs);
     }
 
     @Test
@@ -301,6 +303,31 @@ public class MatchServiceImplTest {
         verify(roundRepository).findByMatchId(matchId, new Sort(Sort.Direction.ASC, "createdAt"));
     }
 
+    @Test
+    public void shouldCallRepositoryMethodOnFinishAllInactiveMatches() {
+        when(matchRepository.findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(maxPlayerInactivityMs))
+                .thenReturn(getMatchEntities());
+
+        matchService.finishAllInactiveMatches();
+
+        verify(matchRepository).findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(maxPlayerInactivityMs);
+        verify(roundScoresRepository).updateScoreByPlayerIdToZero(Arrays.asList("playerId1", "playerId4"));
+        verify(matchRepository).updateMatchState(Arrays.asList("matchId1", "matchId2"), MatchState.FINISHED);
+    }
+
+    @Test
+    public void shouldCallRepositoryMethodOnFinishAllInactiveMatchesForUser() {
+        String userId = "some user id";
+        when(matchRepository.findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(userId, maxPlayerInactivityMs))
+                .thenReturn(getMatchEntities());
+
+        matchService.finishInactiveMatchesForUser(userId);
+
+        verify(matchRepository).findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(userId, maxPlayerInactivityMs);
+        verify(roundScoresRepository).updateScoreByPlayerIdToZero(Arrays.asList("playerId1", "playerId4"));
+        verify(matchRepository).updateMatchState(Arrays.asList("matchId1", "matchId2"), MatchState.FINISHED);
+    }
+
     private List<QuestionEntity> getQuestionEntityList(int quantity) {
         List<QuestionEntity> result = new ArrayList<>();
         for (int i = 0; i < quantity; i++) {
@@ -320,5 +347,27 @@ public class MatchServiceImplTest {
             questionDTOList.add(mock(QuestionDTO.class));
         }
         return questionDTOList;
+    }
+
+    private List<MatchEntity> getMatchEntities() {
+        return Arrays.asList(MatchEntity.builder()
+                .id("matchId1")
+                .players(Arrays.asList(PlayerEntity.builder()
+                        .id("playerId1")
+                        .lastActivityAt(Instant.ofEpochSecond(100))
+                        .build(), PlayerEntity.builder()
+                        .id("playerId2")
+                        .lastActivityAt(Instant.ofEpochSecond(150))
+                        .build()))
+                .build(), MatchEntity.builder()
+                .id("matchId2")
+                .players(Arrays.asList(PlayerEntity.builder()
+                        .id("playerId3")
+                        .lastActivityAt(Instant.ofEpochSecond(110))
+                        .build(), PlayerEntity.builder()
+                        .id("playerId4")
+                        .lastActivityAt(Instant.ofEpochSecond(90))
+                        .build()))
+                .build());
     }
 }

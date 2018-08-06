@@ -6,10 +6,7 @@ import com.epam.epmrduaqgv.back.dto.QuestionDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.*;
 import com.epam.epmrduaqgv.back.model.RoundState;
-import com.epam.epmrduaqgv.back.repository.MatchRepository;
-import com.epam.epmrduaqgv.back.repository.PlayerRepository;
-import com.epam.epmrduaqgv.back.repository.RoundQuestionRepository;
-import com.epam.epmrduaqgv.back.repository.RoundRepository;
+import com.epam.epmrduaqgv.back.repository.*;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.epam.epmrduaqgv.back.service.QuestionService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -22,9 +19,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.epam.epmrduaqgv.back.model.MatchState.FINISHED;
 
 @Service
 public class MatchServiceImpl implements MatchService {
@@ -45,6 +46,9 @@ public class MatchServiceImpl implements MatchService {
     private RoundQuestionRepository roundQuestionRepository;
 
     @Autowired
+    private RoundScoresRepository roundScoresRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @Value("${questions_in_round}")
@@ -55,6 +59,9 @@ public class MatchServiceImpl implements MatchService {
 
     @Value("${players_in_match}")
     private Integer playersInMatch;
+
+    @Value("${max_player_inactivity_ms}")
+    private Integer maxPlayerInactivityMs;
 
     @Transactional
     @Override
@@ -125,6 +132,33 @@ public class MatchServiceImpl implements MatchService {
         }
         int nextRoundCreatorPlayerIdx = rounds.size() % playersInMatch;
         return matchEntity.getPlayers().get(nextRoundCreatorPlayerIdx).getUserId().equals(userId);
+    }
+
+    @Override
+    public void finishAllInactiveMatches() {
+        List<MatchEntity> matchesToFinish = matchRepository
+                .findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(maxPlayerInactivityMs);
+        finishMatches(matchesToFinish);
+    }
+
+    @Override
+    public void finishInactiveMatchesForUser(String userId) {
+        List<MatchEntity> matchesToFinish = matchRepository
+                .findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(userId, maxPlayerInactivityMs);
+        finishMatches(matchesToFinish);
+    }
+
+    private void finishMatches(List<MatchEntity> matchesToFinish) {
+        List<String> idsOfMatchesToUpdate = new ArrayList<>(matchesToFinish.size());
+        List<String> idsOfPlayersToUpdate = new ArrayList<>(matchesToFinish.size());
+        for (MatchEntity matchEntity : matchesToFinish) {
+            idsOfMatchesToUpdate.add(matchEntity.getId());
+            matchEntity.getPlayers().stream()
+                    .min(Comparator.comparing(PlayerEntity::getLastActivityAt))
+                    .ifPresent(p -> idsOfPlayersToUpdate.add(p.getId()));
+        }
+        roundScoresRepository.updateScoreByPlayerIdToZero(idsOfPlayersToUpdate);
+        matchRepository.updateMatchState(idsOfMatchesToUpdate, FINISHED);
     }
 
 
