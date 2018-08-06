@@ -14,12 +14,14 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
@@ -93,6 +95,8 @@ public class AnswerServiceImplTest {
         } catch (IllegalStateException e) {
             verify(playerRepository).findByRoundIdAndUserId(roundId, userId);
             verify(answerRepository, never()).findById(any());
+            verify(matchRepository, never()).getMatchStateByRoundId(roundId);
+            verify(playerRepository, never()).save(any());
             throw e;
         }
     }
@@ -118,7 +122,9 @@ public class AnswerServiceImplTest {
         } catch (IllegalArgumentException e) {
             verify(playerRepository).findByRoundIdAndUserId(roundId, userId);
             verify(answerRepository).findById(answerId);
+            verify(matchRepository, never()).getMatchStateByRoundId(roundId);
             verify(playersAnswersRepository, never()).save(any());
+            verify(playerRepository, never()).save(any());
             throw e;
         }
     }
@@ -140,7 +146,38 @@ public class AnswerServiceImplTest {
         } catch (IllegalArgumentException e) {
             verify(playerRepository).findByRoundIdAndUserId(roundId, userId);
             verify(answerRepository).findById(answerId);
+            verify(matchRepository, never()).getMatchStateByRoundId(roundId);
             verify(playersAnswersRepository, never()).save(any());
+            verify(playerRepository, never()).save(any());
+            throw e;
+        }
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowAnExceptionOnSaveAnswer4() {
+        String userId = "some user id";
+        String roundId = "some round id";
+        String questionId = "some question id";
+        String answerId = "some answer id";
+        String playerId = "some player id";
+
+        when(playerRepository.findByRoundIdAndUserId(roundId, userId)).thenReturn(PlayerEntity.builder()
+                .id(playerId)
+                .build());
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(AnswerEntity.builder()
+                .correct(false)
+                .questionId(questionId)
+                .build()));
+        when(matchRepository.getMatchStateByRoundId(roundId)).thenReturn(MatchState.FINISHED);
+
+        try {
+            answerService.saveAnswer(userId, roundId, questionId, answerId);
+        } catch (IllegalArgumentException e) {
+            verify(playerRepository).findByRoundIdAndUserId(roundId, userId);
+            verify(answerRepository).findById(answerId);
+            verify(matchRepository).getMatchStateByRoundId(roundId);
+            verify(playersAnswersRepository, never()).save(any());
+            verify(playerRepository, never()).save(any());
             throw e;
         }
     }
@@ -155,26 +192,34 @@ public class AnswerServiceImplTest {
 
         when(playerRepository.findByRoundIdAndUserId(roundId, userId)).thenReturn(PlayerEntity.builder()
                 .id(playerId)
+                .lastActivityAt(Instant.ofEpochSecond(555555))
                 .build());
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(AnswerEntity.builder()
                 .correct(false)
                 .questionId(questionId)
                 .build()));
+        when(matchRepository.getMatchStateByRoundId(roundId)).thenReturn(MatchState.IN_PROGRESS);
 
         answerService.saveAnswer(userId, roundId, questionId, answerId);
 
         ArgumentCaptor<PlayersAnswersEntity> playersAnswersEntityArgumentCaptor =
                 ArgumentCaptor.forClass(PlayersAnswersEntity.class);
+        ArgumentCaptor<PlayerEntity> playerEntityArgumentCaptor =
+                ArgumentCaptor.forClass(PlayerEntity.class);
         verify(playerRepository).findByRoundIdAndUserId(roundId, userId);
         verify(answerRepository).findById(answerId);
+        verify(matchRepository).getMatchStateByRoundId(roundId);
         verify(playersAnswersRepository).save(playersAnswersEntityArgumentCaptor.capture());
+        verify(playerRepository).save(playerEntityArgumentCaptor.capture());
         verify(roundScoresRepository, never()).updateScore(any(), any(), anyInt());
 
         PlayersAnswersEntity playersAnswersEntityArgumentValue = playersAnswersEntityArgumentCaptor.getValue();
+        PlayerEntity playerEntityArgumentValue = playerEntityArgumentCaptor.getValue();
 
         assertEquals(roundId, playersAnswersEntityArgumentValue.getRoundId());
         assertEquals(questionId, playersAnswersEntityArgumentValue.getQuestionId());
         assertEquals(answerId, playersAnswersEntityArgumentValue.getAnswerId());
+        assertNotEquals(Instant.ofEpochSecond(555555), playerEntityArgumentValue.getLastActivityAt());
     }
 
     @Test
@@ -192,6 +237,7 @@ public class AnswerServiceImplTest {
                 .correct(true)
                 .questionId(questionId)
                 .build()));
+        when(matchRepository.getMatchStateByRoundId(roundId)).thenReturn(MatchState.IN_PROGRESS);
 
         answerService.saveAnswer(userId, roundId, questionId, answerId);
 
@@ -220,6 +266,7 @@ public class AnswerServiceImplTest {
                 .correct(true)
                 .questionId(questionId)
                 .build()));
+        when(matchRepository.getMatchStateByRoundId(roundId)).thenReturn(MatchState.IN_PROGRESS);
         when(roundScoresRepository.updateScore(roundId, playerId, scoreForAnswer)).thenReturn(1);
 
         answerService.saveAnswer(userId, roundId, questionId, answerId);
@@ -243,6 +290,7 @@ public class AnswerServiceImplTest {
                 .correct(false)
                 .questionId(questionId)
                 .build()));
+        when(matchRepository.getMatchStateByRoundId(roundId)).thenReturn(MatchState.IN_PROGRESS);
         when(playersAnswersRepository.findByRoundId(roundId)).thenReturn(getMocksList(PlayersAnswersEntity.class, 1));
         when(roundRepository.updateRoundState(roundId, RoundState.IN_PROGRESS)).thenReturn(1);
 
@@ -251,7 +299,7 @@ public class AnswerServiceImplTest {
         verify(playersAnswersRepository).findByRoundId(roundId);
         verify(roundRepository).updateRoundState(roundId, RoundState.IN_PROGRESS);
         verify(roundRepository, never()).findAllMatchRoundsByRoundId(roundId, Sort.unsorted());
-        verify(matchRepository, never()).updateMatchState(any(), any());
+        verify(matchRepository, never()).updateMatchState(any(String.class), any());
     }
 
     @Test
@@ -269,6 +317,7 @@ public class AnswerServiceImplTest {
                 .correct(false)
                 .questionId(questionId)
                 .build()));
+        when(matchRepository.getMatchStateByRoundId(roundId)).thenReturn(MatchState.IN_PROGRESS);
         when(playersAnswersRepository.findByRoundId(roundId)).thenReturn(getMocksList(PlayersAnswersEntity.class, 2));
 
         answerService.saveAnswer(userId, roundId, questionId, answerId);
@@ -276,7 +325,7 @@ public class AnswerServiceImplTest {
         verify(playersAnswersRepository).findByRoundId(roundId);
         verify(roundRepository, never()).updateRoundState(any(), any());
         verify(roundRepository, never()).findAllMatchRoundsByRoundId(roundId, Sort.unsorted());
-        verify(matchRepository, never()).updateMatchState(any(), any());
+        verify(matchRepository, never()).updateMatchState(any(String.class), any());
     }
 
     @Test
@@ -294,6 +343,7 @@ public class AnswerServiceImplTest {
                 .correct(false)
                 .questionId(questionId)
                 .build()));
+        when(matchRepository.getMatchStateByRoundId(roundId)).thenReturn(MatchState.IN_PROGRESS);
         when(playersAnswersRepository.findByRoundId(roundId))
                 .thenReturn(getMocksList(PlayersAnswersEntity.class, playersInMatch * questionsInRound));
         when(roundRepository.updateRoundState(roundId, RoundState.FINISHED)).thenReturn(1);
@@ -305,7 +355,7 @@ public class AnswerServiceImplTest {
         verify(playersAnswersRepository).findByRoundId(roundId);
         verify(roundRepository).updateRoundState(roundId, RoundState.FINISHED);
         verify(roundRepository).findAllMatchRoundsByRoundId(roundId, Sort.unsorted());
-        verify(matchRepository, never()).updateMatchState(any(), any());
+        verify(matchRepository, never()).updateMatchState(any(String.class), any());
     }
 
     @Test
@@ -324,6 +374,7 @@ public class AnswerServiceImplTest {
                 .correct(false)
                 .questionId(questionId)
                 .build()));
+        when(matchRepository.getMatchStateByRoundId(roundId)).thenReturn(MatchState.IN_PROGRESS);
         when(playersAnswersRepository.findByRoundId(roundId))
                 .thenReturn(getMocksList(PlayersAnswersEntity.class, playersInMatch * questionsInRound));
         when(roundRepository.updateRoundState(roundId, RoundState.FINISHED)).thenReturn(1);

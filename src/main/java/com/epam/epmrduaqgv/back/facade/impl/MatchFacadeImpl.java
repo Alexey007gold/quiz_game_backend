@@ -29,6 +29,7 @@ public class MatchFacadeImpl implements MatchFacade {
 
     @Override
     public synchronized MatchDTO getMatchForUser(String userId) {
+        matchService.finishInactiveMatchesForUser(userId);
         return matchService.getMatchForUser(userId);
     }
 
@@ -39,6 +40,8 @@ public class MatchFacadeImpl implements MatchFacade {
 
     @Override
     public PageDTO<MatchDTO> getMatchesByUserId(String userId, int page, int pageSize) {
+        matchService.finishInactiveMatchesForUser(userId);
+
         Page<MatchEntity> matchEntityPage = matchService.getMatchesByUserId(userId, page, pageSize);
         List<MatchDTO> matchDTOs = objectMapper.convertValue(matchEntityPage.getContent(),
                 new TypeReference<List<MatchDTO>>(){});
@@ -58,6 +61,7 @@ public class MatchFacadeImpl implements MatchFacade {
 
     @Override
     public void saveAnswer(String userId, String roundId, String questionId, String answerId) {
+        matchService.finishInactiveMatchesForUser(userId);
         answerService.saveAnswer(userId, roundId, questionId, answerId);
     }
 }
