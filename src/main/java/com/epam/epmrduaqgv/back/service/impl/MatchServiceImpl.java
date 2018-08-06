@@ -21,11 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,6 +101,7 @@ public class MatchServiceImpl implements MatchService {
                 .userId(userId)
                 .matchId(matchEntity.getId())
                 .playerNumber(newPlayerNumber)
+                .lastActivityAt(Instant.now())
                 .build());
         playerEntityList.add(playerEntity);
 
@@ -174,14 +173,18 @@ public class MatchServiceImpl implements MatchService {
     public void finishAllInactiveMatches() {
         List<MatchEntity> matchesToFinish = matchRepository
                 .findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(maxPlayerInactivityMs);
-        finishMatches(matchesToFinish);
+        if (!matchesToFinish.isEmpty()) {
+            finishMatches(matchesToFinish);
+        }
     }
 
     @Override
     public void finishInactiveMatchesForUser(String userId) {
         List<MatchEntity> matchesToFinish = matchRepository
                 .findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(userId, maxPlayerInactivityMs);
-        finishMatches(matchesToFinish);
+        if (!matchesToFinish.isEmpty()) {
+            finishMatches(matchesToFinish);
+        }
     }
 
     private void finishMatches(List<MatchEntity> matchesToFinish) {

@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class MatchFacadeImpl implements MatchFacade {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Transactional
     @Override
     public synchronized MatchDTO getMatchForUser(String userId) {
         matchService.finishInactiveMatchesForUser(userId);
@@ -38,6 +40,7 @@ public class MatchFacadeImpl implements MatchFacade {
         return matchService.createRound(userId, matchId, topicId);
     }
 
+    @Transactional
     @Override
     public PageDTO<MatchDTO> getMatchesByUserId(String userId, int page, int pageSize) {
         matchService.finishInactiveMatchesForUser(userId);
@@ -59,6 +62,7 @@ public class MatchFacadeImpl implements MatchFacade {
         return matchService.getRoundsByMatchId(matchId);
     }
 
+    @Transactional
     @Override
     public void saveAnswer(String userId, String roundId, String questionId, String answerId) {
         matchService.finishInactiveMatchesForUser(userId);
