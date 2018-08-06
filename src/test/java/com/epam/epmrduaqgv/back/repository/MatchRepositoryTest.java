@@ -140,6 +140,37 @@ public class MatchRepositoryTest {
 
     @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql"})
     @Test
+    public void shouldReturnCorrectResultsOnFindByPlayerWithUserIdAndMatchStateNot() {
+        String userId = userRepository.findByEmail("test1@gmail.com").getId();
+
+        List<MatchEntity> result1 = matchRepository.findByPlayerWithUserIdAndMatchStateNot(userId, WAITING_FOR_OPPONENT);
+        List<MatchEntity> result2 = matchRepository.findByPlayerWithUserIdAndMatchStateNot(userId, FINISHED);
+        List<MatchEntity> result3 = matchRepository.findByPlayerWithUserIdAndMatchStateNot(userId, IN_PROGRESS);
+
+        assertEquals(3, result1.size());
+        assertEquals(4, result2.size());
+        assertEquals(3, result3.size());
+    }
+
+    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql"})
+    @Test
+    public void shouldReturnCorrectResultsOnFindByPlayerWithUserIdAndMatchStateNotIn() {
+        String userId = userRepository.findByEmail("test1@gmail.com").getId();
+
+        List<MatchEntity> result1 = matchRepository.findByPlayerWithUserIdAndMatchStateNotIn(userId,
+                Arrays.asList(WAITING_FOR_OPPONENT, FINISHED));
+        List<MatchEntity> result2 = matchRepository.findByPlayerWithUserIdAndMatchStateNotIn(userId,
+                Arrays.asList(IN_PROGRESS, FINISHED));
+        List<MatchEntity> result3 = matchRepository.findByPlayerWithUserIdAndMatchStateNotIn(userId,
+                Arrays.asList(WAITING_FOR_OPPONENT, IN_PROGRESS));
+
+        assertEquals(2, result1.size());
+        assertEquals(2, result2.size());
+        assertEquals(1, result3.size());
+    }
+
+    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql"})
+    @Test
     public void shouldReturnCorrectResultsOnFindWithPlayersNumberLessThan() {
         List<MatchEntity> result = matchRepository.findWithPlayersNumberLessThan(2L);
 
