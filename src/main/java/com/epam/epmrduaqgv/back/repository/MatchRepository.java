@@ -40,8 +40,8 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
             "JOIN PlayerEntity p ON p.matchId = m.id " +
             "WHERE p.userId = :userId AND m.matchState = 1" +
             "GROUP BY m.id " +
-            "HAVING DATEDIFF('millisecond', (SELECT MIN(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)," +
-            "                           (SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)) > :diffMilli")
+            "HAVING ((EXTRACT(epoch from(SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id))) - " +
+            "        (EXTRACT(epoch from(SELECT MIN(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)))) > :diffMilli / 1000")
     List<MatchEntity> findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(@Param("userId") String userId,
                                                                                          @Param("diffMilli") Integer diffMilli);
 
@@ -49,8 +49,8 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
             "JOIN PlayerEntity p ON p.matchId = m.id " +
             "WHERE m.matchState = 1" +
             "GROUP BY m.id " +
-            "HAVING DATEDIFF('millisecond', (SELECT MIN(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)," +
-            "                           (SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)) > :diffMilli")
+            "HAVING ((EXTRACT(epoch from(SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id))) - " +
+            "        (EXTRACT(epoch from(SELECT MIN(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)))) > :diffMilli / 1000")
     List<MatchEntity> findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(@Param("diffMilli") Integer diffMilli);
 
     @Query("SELECT m FROM MatchEntity m " +
