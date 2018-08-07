@@ -28,7 +28,6 @@ public class UserServiceImplTest {
 
     private static final String EMAIL = "email";
     private static final String NICK = "testUser";
-    private static final String SCORE_FIELD = "COALESCE(rs.score, 0)";
     private static final String SUM_SCORE_FIELD = "SUM(COALESCE(rs.score, 0))";
 
     @InjectMocks
@@ -86,7 +85,7 @@ public class UserServiceImplTest {
         assertEquals(0, capturedPageable.getPageNumber());
         assertEquals(6, capturedPageable.getPageSize());
         assertEquals("some id", capturedId);
-        assertEquals(Sort.Direction.DESC, capturedPageable.getSort().getOrderFor(SCORE_FIELD).getDirection());
+        assertEquals(Sort.Direction.DESC, capturedPageable.getSort().getOrderFor(SUM_SCORE_FIELD).getDirection());
         assertEquals(page, result);
     }
 
@@ -107,7 +106,7 @@ public class UserServiceImplTest {
         assertEquals(0, capturedPageable.getPageNumber());
         assertEquals(6, capturedPageable.getPageSize());
         assertEquals("cool topic", capturedName);
-        assertEquals(Sort.Direction.DESC, capturedPageable.getSort().getOrderFor(SCORE_FIELD).getDirection());
+        assertEquals(Sort.Direction.DESC, capturedPageable.getSort().getOrderFor(SUM_SCORE_FIELD).getDirection());
         assertEquals(page, result);
     }
 

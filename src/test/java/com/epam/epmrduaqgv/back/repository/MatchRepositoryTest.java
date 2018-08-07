@@ -34,7 +34,7 @@ public class MatchRepositoryTest {
     private UserRepository userRepository;
 
     @Test
-    public void shouldHandleCreationTimeAndUpdatedTimeOnSave() {
+    public void shouldHandleCreationTimeAndUpdatedTimeOnSave() throws InterruptedException {
         MatchEntity matchEntity = MatchEntity.builder().build();
         matchRepository.saveAndFlush(matchEntity);
 
@@ -43,7 +43,8 @@ public class MatchRepositoryTest {
 
         Instant updatedTime = matchEntity.getUpdatedAt();
 
-        matchEntity.setUpdatedAt(Instant.MAX);
+        Thread.sleep(500);
+        matchEntity.setMatchState(FINISHED);
         matchRepository.saveAndFlush(matchEntity);
 
         assertNotEquals(updatedTime, matchEntity.getUpdatedAt());

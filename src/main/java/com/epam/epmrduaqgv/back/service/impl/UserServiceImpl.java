@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 @PropertySource("classpath:validation/validationMessages.properties")
 public class UserServiceImpl implements UserService {
 
-    private static final String SCORE_FIELD = "COALESCE(rs.score, 0)";
     private static final String SUM_SCORE_FIELD = "SUM(COALESCE(rs.score, 0))";
 
     @Value("${validation.message.user.email.unavailable}")
@@ -47,13 +46,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserDTO> findScoresByTopicId(String topicId, int page, int pageSize, Sort.Direction order) {
-        JpaSort jpaSort = JpaSort.unsafe(order, SCORE_FIELD);
+        JpaSort jpaSort = JpaSort.unsafe(order, SUM_SCORE_FIELD);
         return userRepository.findScoresByTopicId(topicId, PageRequest.of(page, pageSize, jpaSort));
     }
 
     @Override
     public Page<UserDTO> findScoresByTopicName(String topicName, int page, int pageSize, Sort.Direction order) {
-        JpaSort jpaSort = JpaSort.unsafe(order, SCORE_FIELD);
+        JpaSort jpaSort = JpaSort.unsafe(order, SUM_SCORE_FIELD);
         return userRepository.findScoresByTopicName(topicName, PageRequest.of(page, pageSize, jpaSort));
     }
 

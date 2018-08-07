@@ -25,7 +25,7 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
             "   LEFT JOIN RoundScoresEntity rs ON rs.playerId = p.id " +
             "       AND (SELECT r.topicId FROM RoundEntity r WHERE rs.roundId = r.id) = :topic_id " +
             "WHERE EXISTS (SELECT id FROM TopicEntity tp WHERE tp.id = :topic_id)" +
-            "GROUP BY u.email")
+            "GROUP BY u.email, u.nickName")
     Page<UserDTO> findScoresByTopicId(@Param("topic_id") String topicId, Pageable pageable);
 
     @Query("SELECT new com.epam.epmrduaqgv.back.dto.UserDTO(u.email, u.nickName, SUM(COALESCE(rs.score, 0))) " +
@@ -35,14 +35,14 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
             "       AND (SELECT r.topicId FROM RoundEntity r WHERE rs.roundId = r.id) = " +
             "           (SELECT id FROM TopicEntity t WHERE t.name = :topic_name) " +
             "WHERE EXISTS (SELECT id FROM TopicEntity tp WHERE tp.name = :topic_name)" +
-            "GROUP BY u.email")
+            "GROUP BY u.email, u.nickName")
     Page<UserDTO> findScoresByTopicName(@Param("topic_name") String topicName, Pageable pageable);
 
     @Query("SELECT new com.epam.epmrduaqgv.back.dto.UserDTO(u.email, u.nickName, SUM(COALESCE(rs.score, 0))) " +
             "FROM UserEntity u " +
             "   LEFT JOIN PlayerEntity p ON p.userId = u.id " +
             "   LEFT JOIN RoundScoresEntity rs ON rs.playerId = p.id " +
-            "GROUP BY u.email")
+            "GROUP BY u.email, u.nickName")
     Page<UserDTO> findTotalScores(Pageable pageable);
 
     @Query("SELECT new com.epam.epmrduaqgv.back.dto.UserDTO(u.email, u.nickName, SUM(COALESCE(rs.score, 0))) " +
