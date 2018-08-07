@@ -18,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -68,7 +67,7 @@ public class MatchServiceImpl implements MatchService {
     @Value("${max_player_inactivity_ms}")
     private Integer maxPlayerInactivityMs;
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional
     @Override
     public MatchDTO getMatchForUser(String userId) {
         checkIfCanAddMatch(userId);
