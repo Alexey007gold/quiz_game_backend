@@ -79,16 +79,21 @@ public class MatchServiceImpl implements MatchService {
 
         List<MatchEntity> matches = matchRepository
                 .findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId((long) playersInMatch, userId);
+        Instant now = Instant.now();
         if (!matches.isEmpty()) {
             matchEntity = matches.get(0);
             playerEntityList = new ArrayList<>(matchEntity.getPlayers());
             newPlayerNumber += playerEntityList.size();
             if (newPlayerNumber == playersInMatch) {
                 matchEntity.setMatchState(MatchState.IN_PROGRESS);
-                matchEntity.setUpdatedAt(Instant.now());
+                matchEntity.setUpdatedAt(now);
+            }
+
+            for (PlayerEntity playerEntity : matchEntity.getPlayers()) {
+                //so matches do not get finished at once if maxPlayerInactivityMs is out
+                playerEntity.setLastActivityAt(now);
             }
         } else {
-            Instant now = Instant.now();
             matchEntity = MatchEntity.builder()
                     .createdAt(now)
                     .updatedAt(now)
@@ -101,7 +106,7 @@ public class MatchServiceImpl implements MatchService {
                 .userId(userId)
                 .matchId(matchEntity.getId())
                 .playerNumber(newPlayerNumber)
-                .lastActivityAt(Instant.now())
+                .lastActivityAt(now)
                 .build());
         playerEntityList.add(playerEntity);
 
