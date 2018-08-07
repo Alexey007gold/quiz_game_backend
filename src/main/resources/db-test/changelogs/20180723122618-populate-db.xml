@@ -6,7 +6,7 @@
 
     <changeSet id="20180703163958" author="Oleksii Kovetskyi">
         <sqlFile dbms="h2" path="classpath:db-test/sql/topics&amp;questions.sql"/>
-        <sqlFile dbms="h2" path="classpath:db-test/sql/users&amp;scores.sql"/>
+        <sqlFile dbms="h2" path="classpath:db-test/sql/users.sql"/>
     </changeSet>
 
 </databaseChangeLog>
