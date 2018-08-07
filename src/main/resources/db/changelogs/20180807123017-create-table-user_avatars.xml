@@ -1,0 +1,29 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20180807123017" author="Oleksii Kovetskyi">
+        <createTable schemaName="${schema.name}" tableName="user_avatars">
+            <column name="id" type="varchar(36)" defaultValueComputed="${uuid_function}">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="user_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="fk_user_avatars_user_id"
+                                 baseTableSchemaName="${schema.name}" baseTableName="user_avatars"
+                                 baseColumnNames="user_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="users"
+                                 referencedColumnNames="id"/>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="user_avatars"
+                             columnNames="user_id"
+                             constraintName="unique_user_avatars_constraint"/>
+    </changeSet>
+
+</databaseChangeLog>
