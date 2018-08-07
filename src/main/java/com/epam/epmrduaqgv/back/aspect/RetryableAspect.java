@@ -17,22 +17,25 @@ public class RetryableAspect {
 
     @Around("@annotation(com.epam.epmrduaqgv.back.aspect.annotation.Retryable)")
     public Object retryWhileNotSuccessfull(ProceedingJoinPoint joinPoint) throws Throwable {
-        Class<? extends Throwable>[] retryFor = getRetryForClasses(joinPoint);
-        while (true) {
+        Retryable annotation = getRetryableAnnotation(joinPoint);
+        Class<? extends Throwable>[] retryFor = annotation.retryForExceptions();
+        int maxRetries = annotation.maxRetries();
+
+        for (int i = 0; i < maxRetries; i++) {
             try {
                 return joinPoint.proceed();
             } catch (Throwable e) {
-                if (!shouldRetry(retryFor, e)) {
+                if (!shouldRetry(retryFor, e) || i + 1 == maxRetries) {
                     throw e;
                 }
             }
         }
+        throw new IllegalStateException("Server error");//should never happen
     }
 
-    private Class<? extends Throwable>[] getRetryForClasses(ProceedingJoinPoint joinPoint) {
+    private Retryable getRetryableAnnotation(ProceedingJoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Retryable annotation = signature.getMethod().getAnnotation(Retryable.class);
-        return annotation.retryForExceptions();
+        return signature.getMethod().getAnnotation(Retryable.class);
     }
 
     private boolean shouldRetry(Class<? extends Throwable>[] retryFor, Throwable actual) {

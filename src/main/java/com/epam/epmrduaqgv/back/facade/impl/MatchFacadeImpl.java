@@ -30,7 +30,7 @@ public class MatchFacadeImpl implements MatchFacade {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Retryable(retryForExceptions = DataIntegrityViolationException.class)
+    @Retryable(retryForExceptions = DataIntegrityViolationException.class, maxRetries = 4)
     @Transactional
     @Override
     public MatchDTO getMatchForUser(String userId) {

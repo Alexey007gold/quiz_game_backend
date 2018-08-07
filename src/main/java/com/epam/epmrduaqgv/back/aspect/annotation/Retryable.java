@@ -10,4 +10,6 @@ import java.lang.annotation.Target;
 public @interface Retryable {
 
     Class<? extends Throwable>[] retryForExceptions() default Throwable.class;
+
+    int maxRetries() default 2;
 }
