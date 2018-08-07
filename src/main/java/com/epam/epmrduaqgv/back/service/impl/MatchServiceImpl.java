@@ -113,7 +113,7 @@ public class MatchServiceImpl implements MatchService {
 
     private void checkIfCanAddMatch(String userId) {
         List<MatchEntity> match = matchRepository.findByPlayerWithUserIdAndMatchStateNot(userId, FINISHED);
-        if (match.size() == maxMatchesInProgress) {
+        if (match.size() >= maxMatchesInProgress) {
             throw new IllegalStateException("You have reached the limit of matches in progress");
         }
     }
@@ -125,9 +125,12 @@ public class MatchServiceImpl implements MatchService {
                 .orElseThrow(() -> new IllegalArgumentException("Match not found"));
         checkIfUserCanCreateRound(userId, matchEntity);
 
+        Instant now = Instant.now();
         RoundEntity roundEntity = RoundEntity.builder()
                 .matchId(matchId)
                 .topicId(topicId)
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
         roundRepository.save(roundEntity);
 
