@@ -1,0 +1,25 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20180809130318" author="Oleksii Kovetskyi">
+        <addColumn schemaName="${schema.name}" tableName="players_answers">
+            <column name="player_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <dropUniqueConstraint schemaName="${schema.name}" tableName="players_answers"
+                              constraintName="unique_round_question_players_answers_constraint"/>
+        <addUniqueConstraint schemaName="${schema.name}" tableName="players_answers"
+                             columnNames="player_id, question_id"
+                             constraintName="unique_round_question_players_answers_constraint"/>
+        <addForeignKeyConstraint constraintName="fk_players_answers_player_id"
+                                 baseTableSchemaName="${schema.name}" baseTableName="players_answers"
+                                 baseColumnNames="player_id"
+                                 referencedTableSchemaName="${schema.name}" referencedTableName="players"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

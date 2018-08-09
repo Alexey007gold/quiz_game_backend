@@ -71,6 +71,7 @@ public class AnswerServiceImpl implements AnswerService {
         }
 
         PlayersAnswersEntity playersAnswersEntity = PlayersAnswersEntity.builder()
+                .playerId(playerEntity.getId())
                 .roundId(roundId)
                 .questionId(questionId)
                 .answerId(answerId)

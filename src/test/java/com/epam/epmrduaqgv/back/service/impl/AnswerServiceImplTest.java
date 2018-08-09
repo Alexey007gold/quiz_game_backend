@@ -216,6 +216,7 @@ public class AnswerServiceImplTest {
         PlayersAnswersEntity playersAnswersEntityArgumentValue = playersAnswersEntityArgumentCaptor.getValue();
         PlayerEntity playerEntityArgumentValue = playerEntityArgumentCaptor.getValue();
 
+        assertEquals(playerId, playersAnswersEntityArgumentValue.getPlayerId());
         assertEquals(roundId, playersAnswersEntityArgumentValue.getRoundId());
         assertEquals(questionId, playersAnswersEntityArgumentValue.getQuestionId());
         assertEquals(answerId, playersAnswersEntityArgumentValue.getAnswerId());

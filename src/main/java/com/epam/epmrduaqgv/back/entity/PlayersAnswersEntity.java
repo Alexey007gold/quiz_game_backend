@@ -21,6 +21,9 @@ public class PlayersAnswersEntity {
     @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id;
 
+    @Column(name = "player_id", nullable = false)
+    private String playerId;
+
     @Column(name = "round_id", nullable = false)
     private String roundId;
 
