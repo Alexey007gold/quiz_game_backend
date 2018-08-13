@@ -10,8 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserAvatarServiceImplTest {
@@ -23,7 +23,19 @@ public class UserAvatarServiceImplTest {
     private UserAvatarRepository userAvatarRepository;
 
     @Test
-    public void updateAvatar() {
+    public void shouldCallRepositoryUpdateOnUpdateAvatar() {
+        String userId = "some user id";
+        byte[] bytes = {1, 2, 3};
+        when(userAvatarRepository.updateByUserId(userId, bytes)).thenReturn(1);
+
+        userAvatarService.updateAvatar(userId, bytes);
+
+        verify(userAvatarRepository).updateByUserId(userId, bytes);
+        verify(userAvatarRepository, never()).save(any());
+    }
+
+    @Test
+    public void shouldCallRepositorySaveOnUpdateAvatar() {
         String userId = "some user id";
         byte[] bytes = {1, 2, 3};
 
@@ -31,7 +43,7 @@ public class UserAvatarServiceImplTest {
 
         ArgumentCaptor<UserAvatarEntity> userAvatarEntityArgumentCaptor =
                 ArgumentCaptor.forClass(UserAvatarEntity.class);
-        verify(userAvatarRepository).removeByUserId(userId);
+        verify(userAvatarRepository).updateByUserId(userId, bytes);
         verify(userAvatarRepository).save(userAvatarEntityArgumentCaptor.capture());
 
         UserAvatarEntity userAvatarEntityValue = userAvatarEntityArgumentCaptor.getValue();
@@ -40,7 +52,7 @@ public class UserAvatarServiceImplTest {
     }
 
     @Test
-    public void getUserAvatar() {
+    public void shouldCallRepositoryOnGetUserAvatar() {
         String userId = "some user id";
         UserAvatarEntity userAvatarEntity = UserAvatarEntity.builder()
                 .userId(userId)

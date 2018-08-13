@@ -5,6 +5,7 @@ import com.epam.epmrduaqgv.back.repository.UserAvatarRepository;
 import com.epam.epmrduaqgv.back.service.UserAvatarService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserAvatarServiceImpl implements UserAvatarService {
@@ -12,13 +13,16 @@ public class UserAvatarServiceImpl implements UserAvatarService {
     @Autowired
     private UserAvatarRepository userAvatarRepository;
 
+    @Transactional
     @Override
     public void updateAvatar(String userId, byte[] bytes) {
-        userAvatarRepository.removeByUserId(userId);
-        userAvatarRepository.save(UserAvatarEntity.builder()
-                .userId(userId)
-                .value(bytes)
-                .build());
+        int result = userAvatarRepository.updateByUserId(userId, bytes);
+        if (result != 1) {
+            userAvatarRepository.save(UserAvatarEntity.builder()
+                    .userId(userId)
+                    .value(bytes)
+                    .build());
+        }
     }
 
     @Override
