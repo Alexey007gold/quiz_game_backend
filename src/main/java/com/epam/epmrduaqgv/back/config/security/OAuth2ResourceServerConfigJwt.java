@@ -29,6 +29,7 @@ public class OAuth2ResourceServerConfigJwt extends ResourceServerConfigurerAdapt
             urlRegistry = urlRegistry
                     .antMatchers(h2consolePath + "/**")
                     .permitAll();
+            http.headers().frameOptions().disable();
         }
         urlRegistry.anyRequest().authenticated();
     }
