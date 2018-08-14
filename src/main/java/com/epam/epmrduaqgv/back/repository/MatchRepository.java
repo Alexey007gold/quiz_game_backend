@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface MatchRepository extends JpaRepository<MatchEntity, String> {
@@ -53,6 +54,21 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
             "        (EXTRACT(epoch from(SELECT MIN(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id)))) > :diffMilli / 1000")
     List<MatchEntity> findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(@Param("diffMilli") Integer diffMilli);
 
+    @Query(value = "SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE p.userId = :userId AND m.matchState = 1" +
+            "GROUP BY m.id " +
+            "HAVING (SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id) < :instant")
+    List<MatchEntity> findMatchesInProgressByUserIdWhereLastActivityIsOlderThan(@Param("userId") String userId,
+                                                                                @Param("instant") Instant instant);
+
+    @Query(value = "SELECT m FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE m.matchState = 1" +
+            "GROUP BY m.id " +
+            "HAVING (SELECT MAX(p.lastActivityAt) from PlayerEntity p where p.matchId = m.id) < :instant")
+    List<MatchEntity> findMatchesInProgressWhereLastActivityIsOlderThan(@Param("instant") Instant instant);
+
     @Query("SELECT m FROM MatchEntity m " +
             "JOIN PlayerEntity p ON p.matchId = m.id " +
             "GROUP BY m.id " +
@@ -67,13 +83,13 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
     List<MatchEntity> findWithPlayersNumberLessThanAndNotContainsAPlayerWithUserId(@Param("playersNumber") Long playersNumber,
                                                                                    @Param("userId") String userId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE MatchEntity m " +
             "SET m.matchState = :matchState " +
             "WHERE m.id = :matchId")
     int updateMatchState(@Param("matchId") String matchId, @Param("matchState") MatchState matchState);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE MatchEntity m " +
             "SET m.matchState = :matchState " +
             "WHERE m.id IN :matchId")

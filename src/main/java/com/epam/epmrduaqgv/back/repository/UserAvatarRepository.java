@@ -12,7 +12,7 @@ public interface UserAvatarRepository extends JpaRepository<UserAvatarEntity, St
 
     UserAvatarEntity findByUserId(String userId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE UserAvatarEntity ua " +
             "SET ua.value = :value " +
             "WHERE ua.userId = :userId")

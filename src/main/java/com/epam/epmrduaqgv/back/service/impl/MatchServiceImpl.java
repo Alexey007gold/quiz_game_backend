@@ -87,11 +87,6 @@ public class MatchServiceImpl implements MatchService {
                 matchEntity.setMatchState(MatchState.IN_PROGRESS);
                 matchEntity.setUpdatedAt(now);
             }
-
-            for (PlayerEntity playerEntity : matchEntity.getPlayers()) {
-                //so matches do not get finished at once if maxPlayerInactivityMs is out
-                playerEntity.setLastActivityAt(now);
-            }
         } else {
             matchEntity = MatchEntity.builder()
                     .createdAt(now)
@@ -178,8 +173,9 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public void finishAllInactiveMatches() {
+        Instant instant = Instant.now().minusMillis(maxPlayerInactivityMs);
         List<MatchEntity> matchesToFinish = matchRepository
-                .findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(maxPlayerInactivityMs);
+                .findMatchesInProgressWhereLastActivityIsOlderThan(instant);
         if (!matchesToFinish.isEmpty()) {
             finishMatches(matchesToFinish);
         }
@@ -187,8 +183,9 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public void finishInactiveMatchesForUser(String userId) {
+        Instant instant = Instant.now().minusMillis(maxPlayerInactivityMs);
         List<MatchEntity> matchesToFinish = matchRepository
-                .findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(userId, maxPlayerInactivityMs);
+                .findMatchesInProgressByUserIdWhereLastActivityIsOlderThan(userId, instant);
         if (!matchesToFinish.isEmpty()) {
             finishMatches(matchesToFinish);
         }

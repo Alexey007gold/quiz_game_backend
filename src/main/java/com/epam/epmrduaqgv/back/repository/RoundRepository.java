@@ -23,7 +23,7 @@ public interface RoundRepository extends JpaRepository<RoundEntity, String> {
             "WHERE r.matchId = (SELECT r.matchId FROM RoundEntity r WHERE r.id = :roundId) ")
     List<RoundEntity> findAllMatchRoundsByRoundId(@Param("roundId") String roundId, Sort sort);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE RoundEntity r " +
             "SET r.roundState = :roundState " +
             "WHERE r.id = :roundId")

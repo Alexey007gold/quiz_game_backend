@@ -12,13 +12,13 @@ public interface RoundScoresRepository extends JpaRepository<RoundScoresEntity, 
 
     RoundScoresEntity findByRoundIdAndPlayerId(String roundId, String playerId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE RoundScoresEntity rs " +
             "SET rs.score = rs.score + :score " +
             "WHERE rs.roundId = :roundId AND rs.playerId = :playerId")
     int updateScore(@Param("roundId") String roundId, @Param("playerId") String playerId, @Param("score") int score);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE RoundScoresEntity rs " +
             "SET rs.score = 0 " +
             "WHERE rs.playerId IN :playerId")
