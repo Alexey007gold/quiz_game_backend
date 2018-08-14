@@ -45,6 +45,7 @@ public class AvatarControllerTest {
     public void shouldCallServiceOnUploadAvatar() throws IOException {
         String userId = "some user id";
         byte[] bytes = {1, 2, 3};
+        String fileName = "someName.png";
 
         MultipartFile multipartFileMock = mock(MultipartFile.class);
         OAuth2Authentication oauthMock = mock(OAuth2Authentication.class);
@@ -54,10 +55,11 @@ public class AvatarControllerTest {
 
         when(multipartFileMock.getSize()).thenReturn(maxAvatarSize);
         when(multipartFileMock.getBytes()).thenReturn(bytes);
+        when(multipartFileMock.getOriginalFilename()).thenReturn(fileName);
 
         avatarController.uploadAvatar(oauthMock, multipartFileMock);
 
-        verify(userAvatarService).updateAvatar(userId, bytes);
+        verify(userAvatarService).updateAvatar(userId, bytes, fileName);
     }
 
     @Test(expected = IllegalArgumentException.class)

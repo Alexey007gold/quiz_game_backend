@@ -383,12 +383,12 @@ public class MatchServiceImplTest {
 
     @Test
     public void shouldCallRepositoryMethodOnFinishAllInactiveMatches() {
-        when(matchRepository.findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(maxPlayerInactivityMs))
+        when(matchRepository.findMatchesInProgressWhereLastActivityIsOlderThan(any()))
                 .thenReturn(getMatchEntities());
 
         matchService.finishAllInactiveMatches();
 
-        verify(matchRepository).findMatchesInProgressWhereLastActivityDifferenceIsMoreThan(maxPlayerInactivityMs);
+        verify(matchRepository).findMatchesInProgressWhereLastActivityIsOlderThan(any());
         verify(roundScoresRepository).updateScoreByPlayerIdToZero(Arrays.asList("playerId1", "playerId4"));
         verify(matchRepository).updateMatchState(Arrays.asList("matchId1", "matchId2"), MatchState.FINISHED);
     }
@@ -396,12 +396,12 @@ public class MatchServiceImplTest {
     @Test
     public void shouldCallRepositoryMethodOnFinishAllInactiveMatchesForUser() {
         String userId = "some user id";
-        when(matchRepository.findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(userId, maxPlayerInactivityMs))
+        when(matchRepository.findMatchesInProgressByUserIdWhereLastActivityIsOlderThan(eq(userId), any()))
                 .thenReturn(getMatchEntities());
 
         matchService.finishInactiveMatchesForUser(userId);
 
-        verify(matchRepository).findMatchesInProgressByUserIdWhereLastActivityDifferenceIsMoreThan(userId, maxPlayerInactivityMs);
+        verify(matchRepository).findMatchesInProgressByUserIdWhereLastActivityIsOlderThan(eq(userId), any());
         verify(roundScoresRepository).updateScoreByPlayerIdToZero(Arrays.asList("playerId1", "playerId4"));
         verify(matchRepository).updateMatchState(Arrays.asList("matchId1", "matchId2"), MatchState.FINISHED);
     }

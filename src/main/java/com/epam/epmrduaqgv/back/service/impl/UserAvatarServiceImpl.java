@@ -7,15 +7,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 public class UserAvatarServiceImpl implements UserAvatarService {
 
     @Autowired
     private UserAvatarRepository userAvatarRepository;
 
+    private Set<String> supportedExtensions = new HashSet<>(Arrays.asList(".jpg", ".jpeg", ".png", ".gif"));
+
     @Transactional
     @Override
-    public void updateAvatar(String userId, byte[] bytes) {
+    public void updateAvatar(String userId, byte[] bytes, String name) {
+        checkFileExtension(name);
         int result = userAvatarRepository.updateByUserId(userId, bytes);
         if (result != 1) {
             userAvatarRepository.save(UserAvatarEntity.builder()
@@ -28,5 +35,17 @@ public class UserAvatarServiceImpl implements UserAvatarService {
     @Override
     public UserAvatarEntity getUserAvatar(String userId) {
         return userAvatarRepository.findByUserId(userId);
+    }
+
+    private void checkFileExtension(String name) {
+        try {
+            String extension = name.substring(name.lastIndexOf('.'));
+            if (!supportedExtensions.contains(extension)) {
+                throw new IllegalArgumentException("File is not supported!");
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("File is not supported!");
+        }
+
     }
 }

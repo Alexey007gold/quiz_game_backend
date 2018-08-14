@@ -26,9 +26,10 @@ public class UserAvatarServiceImplTest {
     public void shouldCallRepositoryUpdateOnUpdateAvatar() {
         String userId = "some user id";
         byte[] bytes = {1, 2, 3};
+        String fileName = "someName.png";
         when(userAvatarRepository.updateByUserId(userId, bytes)).thenReturn(1);
 
-        userAvatarService.updateAvatar(userId, bytes);
+        userAvatarService.updateAvatar(userId, bytes, fileName);
 
         verify(userAvatarRepository).updateByUserId(userId, bytes);
         verify(userAvatarRepository, never()).save(any());
@@ -38,8 +39,9 @@ public class UserAvatarServiceImplTest {
     public void shouldCallRepositorySaveOnUpdateAvatar() {
         String userId = "some user id";
         byte[] bytes = {1, 2, 3};
+        String fileName = "someName.png";
 
-        userAvatarService.updateAvatar(userId, bytes);
+        userAvatarService.updateAvatar(userId, bytes, fileName);
 
         ArgumentCaptor<UserAvatarEntity> userAvatarEntityArgumentCaptor =
                 ArgumentCaptor.forClass(UserAvatarEntity.class);
@@ -49,6 +51,15 @@ public class UserAvatarServiceImplTest {
         UserAvatarEntity userAvatarEntityValue = userAvatarEntityArgumentCaptor.getValue();
         assertEquals(userId, userAvatarEntityValue.getUserId());
         assertEquals(bytes, userAvatarEntityValue.getValue());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowExceptionOnUpdateAvatar() {
+        String userId = "some user id";
+        byte[] bytes = {1, 2, 3};
+        String fileName = "someName.exe";
+
+        userAvatarService.updateAvatar(userId, bytes, fileName);
     }
 
     @Test

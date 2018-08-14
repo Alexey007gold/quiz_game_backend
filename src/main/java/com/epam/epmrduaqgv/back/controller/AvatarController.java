@@ -41,7 +41,7 @@ public class AvatarController {
 
         String userId = ControllerUtils.getUserId(oauth);
 
-        userAvatarService.updateAvatar(userId, file.getBytes());
+        userAvatarService.updateAvatar(userId, file.getBytes(), file.getOriginalFilename());
     }
 
     @GetMapping(produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
