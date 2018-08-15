@@ -7,6 +7,7 @@ import com.epam.epmrduaqgv.back.repository.*;
 import com.epam.epmrduaqgv.back.service.AnswerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,7 +77,12 @@ public class AnswerServiceImpl implements AnswerService {
                 .questionId(questionId)
                 .answerId(answerId)
                 .build();
-        playersAnswersRepository.save(playersAnswersEntity);
+        try {
+            playersAnswersRepository.save(playersAnswersEntity);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("You have already answered this question");
+        }
+
 
         playerEntity.setLastActivityAt(Instant.now());
         playerRepository.save(playerEntity);
