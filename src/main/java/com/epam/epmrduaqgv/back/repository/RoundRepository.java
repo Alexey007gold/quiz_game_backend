@@ -28,4 +28,10 @@ public interface RoundRepository extends JpaRepository<RoundEntity, String> {
             "SET r.roundState = :roundState " +
             "WHERE r.id = :roundId")
     int updateRoundState(@Param("roundId") String roundId, @Param("roundState") RoundState roundState);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE RoundEntity r " +
+            "SET r.roundState = :roundState " +
+            "WHERE r.id IN :roundId")
+    int updateRoundState(@Param("roundId") List<String> roundId, @Param("roundState") RoundState roundState);
 }

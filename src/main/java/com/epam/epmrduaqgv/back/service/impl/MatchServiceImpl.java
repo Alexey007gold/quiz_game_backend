@@ -26,8 +26,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.epam.epmrduaqgv.back.model.MatchState.FINISHED;
-
 @Service
 public class MatchServiceImpl implements MatchService {
 
@@ -111,7 +109,7 @@ public class MatchServiceImpl implements MatchService {
     }
 
     private void checkIfCanAddMatch(String userId) {
-        List<MatchEntity> match = matchRepository.findByPlayerWithUserIdAndMatchStateNot(userId, FINISHED);
+        List<MatchEntity> match = matchRepository.findByPlayerWithUserIdAndMatchStateNot(userId, MatchState.FINISHED);
         if (match.size() >= maxMatchesInProgress) {
             throw new IllegalStateException("You have reached the limit of matches in progress");
         }
@@ -164,6 +162,9 @@ public class MatchServiceImpl implements MatchService {
         if (rounds.size() >= roundsInMatch) {
             return false;
         }
+        if (matchEntity.getMatchState().equals(MatchState.FINISHED)) {
+            return false;
+        }
         if (!rounds.isEmpty() && !rounds.get(rounds.size() - 1).getRoundState().equals(RoundState.FINISHED)) {
             return false;
         }
@@ -194,14 +195,28 @@ public class MatchServiceImpl implements MatchService {
     private void finishMatches(List<MatchEntity> matchesToFinish) {
         List<String> idsOfMatchesToUpdate = new ArrayList<>(matchesToFinish.size());
         List<String> idsOfPlayersToUpdate = new ArrayList<>(matchesToFinish.size());
+        List<String> idsOfRoundsToUpdate = new ArrayList<>(matchesToFinish.size());
         for (MatchEntity matchEntity : matchesToFinish) {
             idsOfMatchesToUpdate.add(matchEntity.getId());
             matchEntity.getPlayers().stream()
                     .min(Comparator.comparing(PlayerEntity::getLastActivityAt))
                     .ifPresent(p -> idsOfPlayersToUpdate.add(p.getId()));
+
+            List<RoundEntity> rounds = matchEntity.getRounds();
+            if (!rounds.isEmpty()) {
+                idsOfRoundsToUpdate.add(rounds.get(rounds.size() - 1).getId());
+            }
         }
-        roundScoresRepository.updateScoreByPlayerIdToZero(idsOfPlayersToUpdate);
-        matchRepository.updateMatchState(idsOfMatchesToUpdate, FINISHED);
+
+        if (!idsOfPlayersToUpdate.isEmpty()) {
+            roundScoresRepository.updateScoreByPlayerIdToZero(idsOfPlayersToUpdate);
+        }
+        if (!idsOfMatchesToUpdate.isEmpty()) {
+            matchRepository.updateMatchState(idsOfMatchesToUpdate, MatchState.FINISHED);
+        }
+        if (!idsOfRoundsToUpdate.isEmpty()) {
+            roundRepository.updateRoundState(idsOfRoundsToUpdate, RoundState.FINISHED);
+        }
     }
 
 
@@ -209,6 +224,9 @@ public class MatchServiceImpl implements MatchService {
         List<RoundEntity> rounds = matchEntity.getRounds();
         if (rounds.size() >= roundsInMatch) {
             throw new IllegalStateException("No more rounds can be created for this match");
+        }
+        if (matchEntity.getMatchState().equals(MatchState.FINISHED)) {
+            throw new IllegalStateException("The match is finished");
         }
         if (!rounds.isEmpty() && !rounds.get(rounds.size() - 1).getRoundState().equals(RoundState.FINISHED)) {
             throw new IllegalStateException("Previous round is not finished yet");

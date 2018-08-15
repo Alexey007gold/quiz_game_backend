@@ -24,6 +24,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.Instant;
 import java.util.*;
 
+import static com.epam.epmrduaqgv.back.model.RoundState.FINISHED;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -318,6 +319,14 @@ public class MatchServiceImplTest {
         assertFalse(result);
     }
 
+    @Test
+    public void shouldReturnFalseOnShouldUserStartRound5() {//when the match is finished
+        MatchEntity matchEntity = createMatchEntity(2, 0, MATCH_ID);
+        matchEntity.setMatchState(MatchState.FINISHED);
+        boolean result = matchService.shouldUserStartRound(matchEntity.getPlayers().get(1).getUserId(), matchEntity);
+        assertFalse(result);
+    }
+
     private MatchEntity createMatchEntity(int playersNumber, int roundsPlayed, String matchId) {
         List<PlayerEntity> playerEntityList = new ArrayList<>(playersNumber);
         for (int i = 0; i < playersNumber; i++) {
@@ -331,7 +340,7 @@ public class MatchServiceImplTest {
         for (int i = 0; i < roundsPlayed; i++) {
             roundEntityList.add(RoundEntity.builder()
                     .matchId(matchId)
-                    .roundState(RoundState.FINISHED)
+                    .roundState(FINISHED)
                     .build());
         }
         return MatchEntity.builder()
@@ -391,6 +400,7 @@ public class MatchServiceImplTest {
         verify(matchRepository).findMatchesInProgressWhereLastActivityIsOlderThan(any());
         verify(roundScoresRepository).updateScoreByPlayerIdToZero(Arrays.asList("playerId1", "playerId4"));
         verify(matchRepository).updateMatchState(Arrays.asList("matchId1", "matchId2"), MatchState.FINISHED);
+        verify(roundRepository).updateRoundState(Collections.singletonList("roundId1"), FINISHED);
     }
 
     @Test
@@ -437,6 +447,9 @@ public class MatchServiceImplTest {
                         .id("playerId2")
                         .lastActivityAt(Instant.ofEpochSecond(150))
                         .build()))
+                .rounds(Collections.singletonList(RoundEntity.builder()
+                        .id("roundId1")
+                        .build()))
                 .build(), MatchEntity.builder()
                 .id("matchId2")
                 .players(Arrays.asList(PlayerEntity.builder()
@@ -446,6 +459,7 @@ public class MatchServiceImplTest {
                         .id("playerId4")
                         .lastActivityAt(Instant.ofEpochSecond(90))
                         .build()))
+                .rounds(Collections.emptyList())
                 .build());
     }
 }

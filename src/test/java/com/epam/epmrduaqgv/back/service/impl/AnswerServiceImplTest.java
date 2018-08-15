@@ -324,7 +324,7 @@ public class AnswerServiceImplTest {
         answerService.saveAnswer(userId, roundId, questionId, answerId);
 
         verify(playersAnswersRepository).findByRoundId(roundId);
-        verify(roundRepository, never()).updateRoundState(any(), any());
+        verify(roundRepository, never()).updateRoundState(any(String.class), any());
         verify(roundRepository, never()).findAllMatchRoundsByRoundId(roundId, Sort.unsorted());
         verify(matchRepository, never()).updateMatchState(any(String.class), any());
     }
