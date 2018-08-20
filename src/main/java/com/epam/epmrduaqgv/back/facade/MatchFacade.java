@@ -12,6 +12,10 @@ public interface MatchFacade {
 
     RoundDTO createRound(String userId, String matchId, String topicId);
 
+    MatchDTO getMatchById(String matchId);
+
+    List<MatchDTO> getMatchesByIds(List<String> matchIds);
+
     PageDTO<MatchDTO> getMatchesByUserId(String userId, int page, int pageSize);
 
     PageDTO<MatchSmallDTO> getMatchSmallDTOByUserId(String userId, int page, int pageSize);

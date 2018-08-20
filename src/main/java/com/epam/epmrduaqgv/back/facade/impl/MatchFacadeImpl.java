@@ -44,6 +44,16 @@ public class MatchFacadeImpl implements MatchFacade {
         return matchService.createRound(userId, matchId, topicId);
     }
 
+    @Override
+    public MatchDTO getMatchById(String matchId) {
+        return objectMapper.convertValue(matchService.getMatchById(matchId), MatchDTO.class);
+    }
+
+    @Override
+    public List<MatchDTO> getMatchesByIds(List<String> matchIds) {
+        return objectMapper.convertValue(matchService.getMatchesByIds(matchIds), new TypeReference<List<MatchDTO>>() {});
+    }
+
     @Transactional
     @Override
     public PageDTO<MatchDTO> getMatchesByUserId(String userId, int page, int pageSize) {

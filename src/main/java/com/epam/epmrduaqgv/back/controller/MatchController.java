@@ -67,6 +67,18 @@ public class MatchController {
         return matchFacade.getMatchSmallDTOByUserId(userId, page, pageSize);
     }
 
+    @GetMapping("/{id}")
+    @ApiOperation(value = "Get match DTO by id", authorizations = @Authorization(value = "oauth2"))
+    public MatchDTO getMatchDTOById(@PathVariable(value = "id") String id) {
+        return matchFacade.getMatchById(id);
+    }
+
+    @GetMapping("/")
+    @ApiOperation(value = "Get match DTOs by ids", authorizations = @Authorization(value = "oauth2"))
+    public List<MatchDTO> getMatchDTOsByIds(@RequestParam(value = "id") List<String> ids) {
+        return matchFacade.getMatchesByIds(ids);
+    }
+
     @PostMapping("/answer")
     @ApiOperation(value = "Give answer to a question", authorizations = @Authorization(value = "oauth2"))
     public void giveAnswer(@ApiIgnore OAuth2Authentication oauth,

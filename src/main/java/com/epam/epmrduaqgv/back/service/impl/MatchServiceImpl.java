@@ -143,6 +143,16 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
+    public MatchEntity getMatchById(String matchId) {
+        return matchRepository.findById(matchId).orElseThrow(() -> new IllegalArgumentException("Not found"));
+    }
+
+    @Override
+    public List<MatchEntity> getMatchesByIds(List<String> matchIds) {
+        return matchRepository.findAllById(matchIds);
+    }
+
+    @Override
     public Page<MatchEntity> getMatchesByUserId(String userId, int page, int pageSize) {
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "updatedAt");
         return matchRepository.findByPlayerWithUserId(userId, pageRequest);
