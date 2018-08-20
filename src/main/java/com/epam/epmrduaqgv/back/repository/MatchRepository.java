@@ -1,5 +1,6 @@
 package com.epam.epmrduaqgv.back.repository;
 
+import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
 import com.epam.epmrduaqgv.back.model.MatchState;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,11 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
             "JOIN PlayerEntity p ON p.matchId = m.id " +
             "WHERE p.userId = :userId")
     Page<MatchEntity> findByPlayerWithUserId(@Param("userId") String userId, Pageable pageable);
+
+    @Query("SELECT new com.epam.epmrduaqgv.back.dto.MatchSmallDTO(m.id, m.updatedAt) FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE p.userId = :userId")
+    Page<MatchSmallDTO> findMatchSmallDTOByPlayerWithUserId(@Param("userId") String userId, Pageable pageable);
 
     @Query("SELECT m FROM MatchEntity m " +
             "JOIN PlayerEntity p ON p.matchId = m.id " +

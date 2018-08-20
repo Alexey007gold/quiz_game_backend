@@ -1,6 +1,7 @@
 package com.epam.epmrduaqgv.back.controller;
 
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
+import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.facade.MatchFacade;
@@ -54,6 +55,16 @@ public class MatchController {
         String userId = ControllerUtils.getUserId(oauth);
 
         return matchFacade.getMatchesByUserId(userId, page, pageSize);
+    }
+
+    @GetMapping("/my/idOnly")
+    @ApiOperation(value = "Get matches of the current user (only id and updatedAt)", authorizations = @Authorization(value = "oauth2"))
+    public PageDTO<MatchSmallDTO> getMyMatchesSmallDTO(@ApiIgnore OAuth2Authentication oauth,
+                                                       @RequestParam(value = "page", defaultValue = "0") int page,
+                                                       @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
+        String userId = ControllerUtils.getUserId(oauth);
+
+        return matchFacade.getMatchSmallDTOByUserId(userId, page, pageSize);
     }
 
     @PostMapping("/answer")

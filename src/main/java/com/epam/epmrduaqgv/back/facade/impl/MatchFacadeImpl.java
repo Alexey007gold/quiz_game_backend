@@ -2,6 +2,7 @@ package com.epam.epmrduaqgv.back.facade.impl;
 
 import com.epam.epmrduaqgv.back.aspect.annotation.Retryable;
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
+import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
@@ -58,6 +59,17 @@ public class MatchFacadeImpl implements MatchFacade {
 
         return PageDTO.of(matchDTOs, page, pageSize,
                 matchEntityPage.getNumberOfElements(), matchEntityPage.getTotalElements());
+    }
+
+    @Transactional
+    @Override
+    public PageDTO<MatchSmallDTO> getMatchSmallDTOByUserId(String userId, int page, int pageSize) {
+        matchService.finishInactiveMatchesForUser(userId);
+
+        Page<MatchSmallDTO> matchSmallDTOPage = matchService.getMatchSmallDTOByUserId(userId, page, pageSize);
+
+        return PageDTO.of(matchSmallDTOPage.getContent(), page, pageSize,
+                matchSmallDTOPage.getNumberOfElements(), matchSmallDTOPage.getTotalElements());
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.epam.epmrduaqgv.back.facade;
 
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
+import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 
@@ -12,6 +13,8 @@ public interface MatchFacade {
     RoundDTO createRound(String userId, String matchId, String topicId);
 
     PageDTO<MatchDTO> getMatchesByUserId(String userId, int page, int pageSize);
+
+    PageDTO<MatchSmallDTO> getMatchSmallDTOByUserId(String userId, int page, int pageSize);
 
     List<RoundDTO> getRoundsByMatchId(String matchId);
 
