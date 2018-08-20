@@ -137,6 +137,8 @@ public class MatchServiceImpl implements MatchService {
                 .collect(Collectors.toList());
         roundQuestionRepository.saveAll(roundQuestionEntityList);
 
+        matchRepository.updateMatchUpdatedAt(matchId);
+
         return createRoundDTO(roundEntity, questions);
     }
 

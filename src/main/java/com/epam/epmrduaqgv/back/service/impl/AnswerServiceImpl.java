@@ -95,6 +95,7 @@ public class AnswerServiceImpl implements AnswerService {
         if (state.equals(RoundState.FINISHED)) {
             checkMatchState(roundId);
         }
+        matchRepository.updateMatchUpdatedAtByRoundId(roundId);
     }
 
     private void updateScore(String roundId, String playerId) {
@@ -126,10 +127,12 @@ public class AnswerServiceImpl implements AnswerService {
         return state;
     }
 
-    private void checkMatchState(String roundId) {
-        List<RoundEntity> rounds = roundRepository.findAllMatchRoundsByRoundId(roundId, Sort.unsorted());
+    private MatchState checkMatchState(String matchId) {
+        List<RoundEntity> rounds = roundRepository.findAllMatchRoundsByRoundId(matchId, Sort.unsorted());
         if (rounds.size() == roundsInMatch) {
             matchRepository.updateMatchState(rounds.get(0).getMatchId(), MatchState.FINISHED);
+            return MatchState.FINISHED;
         }
+        return MatchState.IN_PROGRESS;
     }
 }
