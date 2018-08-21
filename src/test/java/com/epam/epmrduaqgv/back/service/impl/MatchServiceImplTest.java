@@ -369,6 +369,7 @@ public class MatchServiceImplTest {
         verify(roundRepository).save(roundEntityArgumentCaptor.capture());
         verify(questionService).findRandomQuestionsByTopicId(topicId, questionsInRound);
         verify(roundQuestionRepository).saveAll(roundQuestionListArgumentCaptor.capture());
+        verify(matchRepository).updateMatchUpdatedAt(matchId);
 
         RoundEntity roundEntityArgument = roundEntityArgumentCaptor.getValue();
         List<RoundQuestionEntity> roundQuestionListArgument = roundQuestionListArgumentCaptor.getValue();

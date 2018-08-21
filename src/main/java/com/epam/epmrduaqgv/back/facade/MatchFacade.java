@@ -4,8 +4,10 @@ import com.epam.epmrduaqgv.back.dto.MatchDTO;
 import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
+import com.epam.epmrduaqgv.back.model.MatchState;
 
 import java.util.List;
+import java.util.Map;
 
 public interface MatchFacade {
     MatchDTO getMatchForUser(String userId);
@@ -18,7 +20,7 @@ public interface MatchFacade {
 
     PageDTO<MatchDTO> getMatchesByUserId(String userId, int page, int pageSize);
 
-    PageDTO<MatchSmallDTO> getMatchSmallDTOByUserId(String userId, int page, int pageSize);
+    Map<MatchState, List<MatchSmallDTO>> getMatchSmallDTOMap(String userId, int page, int pageSize);
 
     List<RoundDTO> getRoundsByMatchId(String matchId);
 

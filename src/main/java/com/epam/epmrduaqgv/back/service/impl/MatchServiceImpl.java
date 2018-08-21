@@ -1,6 +1,9 @@
 package com.epam.epmrduaqgv.back.service.impl;
 
-import com.epam.epmrduaqgv.back.dto.*;
+import com.epam.epmrduaqgv.back.dto.MatchDTO;
+import com.epam.epmrduaqgv.back.dto.PlayerDTO;
+import com.epam.epmrduaqgv.back.dto.QuestionDTO;
+import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.*;
 import com.epam.epmrduaqgv.back.model.MatchState;
 import com.epam.epmrduaqgv.back.model.RoundState;
@@ -156,12 +159,6 @@ public class MatchServiceImpl implements MatchService {
     public Page<MatchEntity> getMatchesByUserId(String userId, int page, int pageSize) {
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "updatedAt");
         return matchRepository.findByPlayerWithUserId(userId, pageRequest);
-    }
-
-    @Override
-    public Page<MatchSmallDTO> getMatchSmallDTOByUserId(String userId, int page, int pageSize) {
-        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "updatedAt");
-        return matchRepository.findMatchSmallDTOByPlayerWithUserId(userId, pageRequest);
     }
 
     @Override

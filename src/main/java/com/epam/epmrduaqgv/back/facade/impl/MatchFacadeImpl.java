@@ -7,6 +7,7 @@ import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
 import com.epam.epmrduaqgv.back.facade.MatchFacade;
+import com.epam.epmrduaqgv.back.model.MatchState;
 import com.epam.epmrduaqgv.back.service.AnswerService;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -18,6 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.*;
 
 @Service
 public class MatchFacadeImpl implements MatchFacade {
@@ -73,13 +77,18 @@ public class MatchFacadeImpl implements MatchFacade {
 
     @Transactional
     @Override
-    public PageDTO<MatchSmallDTO> getMatchSmallDTOByUserId(String userId, int page, int pageSize) {
+    public Map<MatchState, List<MatchSmallDTO>> getMatchSmallDTOMap(String userId, int page, int pageSize) {
         matchService.finishInactiveMatchesForUser(userId);
 
-        Page<MatchSmallDTO> matchSmallDTOPage = matchService.getMatchSmallDTOByUserId(userId, page, pageSize);
+        Page<MatchEntity> matchEntityPage = matchService.getMatchesByUserId(userId, page, pageSize);
 
-        return PageDTO.of(matchSmallDTOPage.getContent(), page, pageSize,
-                matchSmallDTOPage.getNumberOfElements(), matchSmallDTOPage.getTotalElements());
+        return matchEntityPage.getContent().stream()
+                .collect(groupingBy(MatchEntity::getMatchState,
+                        mapping(m -> MatchSmallDTO.builder()
+                                .id(m.getId())
+                                .updatedAt(m.getUpdatedAt())
+                                .build(),
+                                toList())));
     }
 
     @Override

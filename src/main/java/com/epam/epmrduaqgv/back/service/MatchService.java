@@ -1,7 +1,6 @@
 package com.epam.epmrduaqgv.back.service;
 
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
-import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
 import org.springframework.data.domain.Page;
@@ -19,8 +18,6 @@ public interface MatchService {
     List<MatchEntity> getMatchesByIds(List<String> matchIds);
 
     Page<MatchEntity> getMatchesByUserId(String userId, int page, int pageSize);
-
-    Page<MatchSmallDTO> getMatchSmallDTOByUserId(String userId, int page, int pageSize);
 
     List<RoundDTO> getRoundsByMatchId(String matchId);
 

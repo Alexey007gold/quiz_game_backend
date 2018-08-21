@@ -5,6 +5,7 @@ import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.facade.MatchFacade;
+import com.epam.epmrduaqgv.back.model.MatchState;
 import com.epam.epmrduaqgv.back.util.ControllerUtils;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(path = "/match")
@@ -58,13 +60,14 @@ public class MatchController {
     }
 
     @GetMapping("/my/idOnly")
-    @ApiOperation(value = "Get matches of the current user (only id and updatedAt)", authorizations = @Authorization(value = "oauth2"))
-    public PageDTO<MatchSmallDTO> getMyMatchesSmallDTO(@ApiIgnore OAuth2Authentication oauth,
-                                                       @RequestParam(value = "page", defaultValue = "0") int page,
-                                                       @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
+    @ApiOperation(value = "Get matches of the current user (only id and updatedAt) mapped by matchState",
+            authorizations = @Authorization(value = "oauth2"))
+    public Map<MatchState, List<MatchSmallDTO>> getMyMatchesSmallDTO(@ApiIgnore OAuth2Authentication oauth,
+                                                                     @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                     @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
         String userId = ControllerUtils.getUserId(oauth);
 
-        return matchFacade.getMatchSmallDTOByUserId(userId, page, pageSize);
+        return matchFacade.getMatchSmallDTOMap(userId, page, pageSize);
     }
 
     @GetMapping("/{id}")
