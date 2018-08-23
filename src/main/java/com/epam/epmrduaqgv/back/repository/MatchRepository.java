@@ -1,5 +1,6 @@
 package com.epam.epmrduaqgv.back.repository;
 
+import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
 import com.epam.epmrduaqgv.back.model.MatchState;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,11 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
             "JOIN PlayerEntity p ON p.matchId = m.id " +
             "WHERE p.userId = :userId")
     Page<MatchEntity> findByPlayerWithUserId(@Param("userId") String userId, Pageable pageable);
+
+    @Query("SELECT new com.epam.epmrduaqgv.back.dto.MatchSmallDTO(m.id, m.updatedAt) FROM MatchEntity m " +
+            "JOIN PlayerEntity p ON p.matchId = m.id " +
+            "WHERE p.userId = :userId")
+    Page<MatchSmallDTO> findMatchSmallDTOByPlayerWithUserId(@Param("userId") String userId, Pageable pageable);
 
     @Query("SELECT m FROM MatchEntity m " +
             "JOIN PlayerEntity p ON p.matchId = m.id " +
@@ -85,18 +91,36 @@ public interface MatchRepository extends JpaRepository<MatchEntity, String> {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE MatchEntity m " +
-            "SET m.matchState = :matchState " +
+            "SET m.matchState = :matchState, m.updatedAt = now() " +
             "WHERE m.id = :matchId")
     int updateMatchState(@Param("matchId") String matchId, @Param("matchState") MatchState matchState);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE MatchEntity m " +
-            "SET m.matchState = :matchState " +
+            "SET m.matchState = :matchState, m.updatedAt = now() " +
             "WHERE m.id IN :matchId")
     int updateMatchState(@Param("matchId") List<String> matchId, @Param("matchState") MatchState matchState);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE MatchEntity m " +
+            "SET m.updatedAt = now() " +
+            "WHERE m.id = :matchId")
+    int updateMatchUpdatedAt(@Param("matchId") String matchId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE MatchEntity m " +
+            "SET m.updatedAt = now() " +
+            "WHERE m.id IN :matchId")
+    int updateMatchUpdatedAt(@Param("matchId") List<String> matchId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE MatchEntity m " +
+            "SET m.updatedAt = now() " +
+            "WHERE m.id = (SELECT r.matchId FROM RoundEntity r WHERE r.id = :roundId)")
+    int updateMatchUpdatedAtByRoundId(@Param("roundId") String roundId);
+
     @Query("SELECT m.matchState FROM MatchEntity m " +
             "JOIN RoundEntity r ON r.matchId = m.id " +
-            "WHERE r.id IN :roundId")
+            "WHERE r.id = :roundId")
     MatchState getMatchStateByRoundId(@Param("roundId") String roundId);
 }

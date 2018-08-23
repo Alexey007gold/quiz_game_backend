@@ -140,7 +140,19 @@ public class MatchServiceImpl implements MatchService {
                 .collect(Collectors.toList());
         roundQuestionRepository.saveAll(roundQuestionEntityList);
 
+        matchRepository.updateMatchUpdatedAt(matchId);
+
         return createRoundDTO(roundEntity, questions);
+    }
+
+    @Override
+    public MatchEntity getMatchById(String matchId) {
+        return matchRepository.findById(matchId).orElseThrow(() -> new IllegalArgumentException("Not found"));
+    }
+
+    @Override
+    public List<MatchEntity> getMatchesByIds(List<String> matchIds) {
+        return matchRepository.findAllById(matchIds);
     }
 
     @Override

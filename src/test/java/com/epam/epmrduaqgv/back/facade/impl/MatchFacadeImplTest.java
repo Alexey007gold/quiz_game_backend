@@ -1,9 +1,11 @@
 package com.epam.epmrduaqgv.back.facade.impl;
 
 import com.epam.epmrduaqgv.back.dto.MatchDTO;
+import com.epam.epmrduaqgv.back.dto.MatchSmallDTO;
 import com.epam.epmrduaqgv.back.dto.PageDTO;
 import com.epam.epmrduaqgv.back.dto.RoundDTO;
 import com.epam.epmrduaqgv.back.entity.MatchEntity;
+import com.epam.epmrduaqgv.back.model.MatchState;
 import com.epam.epmrduaqgv.back.service.AnswerService;
 import com.epam.epmrduaqgv.back.service.MatchService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,9 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.Page;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -90,6 +90,28 @@ public class MatchFacadeImplTest {
         assertEquals(matchDTOList, result.getData());
         assertTrue(matchDTOList.get(0).isShouldStartRound());
         assertTrue(matchDTOList.get(1).isShouldStartRound());
+    }
+
+    @Test
+    public void shouldCallServicesOnGetMatchSmallDTOMap() {
+        Page<MatchEntity> matchEntityPageMock = mock(Page.class);
+        List<MatchEntity> pageContentMock = Arrays.asList(MatchEntity.builder().matchState(MatchState.WAITING_FOR_OPPONENT).build(),
+                MatchEntity.builder().matchState(MatchState.WAITING_FOR_OPPONENT).build(),
+                MatchEntity.builder().matchState(MatchState.IN_PROGRESS).build());
+        String userId = "some user id";
+        int page = 0;
+        int pageSize = 5;
+        when(matchService.getMatchesByUserId(userId, page, pageSize)).thenReturn(matchEntityPageMock);
+        when(matchEntityPageMock.getContent()).thenReturn(pageContentMock);
+
+        Map<MatchState, List<MatchSmallDTO>> result = matchFacade.getMatchSmallDTOMap(userId, page, pageSize);
+
+        verify(matchService).finishInactiveMatchesForUser(userId);
+        verify(matchService).getMatchesByUserId(userId, page, pageSize);
+
+        assertEquals(new HashSet<>(Arrays.asList(MatchState.WAITING_FOR_OPPONENT, MatchState.IN_PROGRESS)), result.keySet());
+        assertEquals(1, result.get(MatchState.IN_PROGRESS).size());
+        assertEquals(2, result.get(MatchState.WAITING_FOR_OPPONENT).size());
     }
 
     @Test

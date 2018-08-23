@@ -211,6 +211,7 @@ public class AnswerServiceImplTest {
         verify(matchRepository).getMatchStateByRoundId(roundId);
         verify(playersAnswersRepository).save(playersAnswersEntityArgumentCaptor.capture());
         verify(playerRepository).save(playerEntityArgumentCaptor.capture());
+        verify(matchRepository).updateMatchUpdatedAtByRoundId(roundId);
         verify(roundScoresRepository, never()).updateScore(any(), any(), anyInt());
 
         PlayersAnswersEntity playersAnswersEntityArgumentValue = playersAnswersEntityArgumentCaptor.getValue();

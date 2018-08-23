@@ -13,6 +13,10 @@ public interface MatchService {
 
     RoundDTO createRound(String userId, String matchId, String topicId);
 
+    MatchEntity getMatchById(String matchId);
+
+    List<MatchEntity> getMatchesByIds(List<String> matchIds);
+
     Page<MatchEntity> getMatchesByUserId(String userId, int page, int pageSize);
 
     List<RoundDTO> getRoundsByMatchId(String matchId);

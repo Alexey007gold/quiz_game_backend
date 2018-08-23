@@ -125,6 +125,33 @@ public class MatchRepositoryTest {
         assertEquals(2, result);
     }
 
+    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql",
+            "classpath:sql/add_topics.sql", "classpath:sql/add_rounds.sql"})
+    @Test
+    public void shouldUpdateDbOnUpdateMatchUpdatedAt() {
+        String matchId = matchRepository.findAll().stream()
+                .filter(m -> m.getCreatedAt().toString().equals("2016-06-22T19:10:20Z"))
+                .map(MatchEntity::getId).findFirst().get();
+
+        int result = matchRepository.updateMatchUpdatedAt(matchId);
+
+        assertEquals(1, result);
+    }
+
+    @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql",
+            "classpath:sql/add_topics.sql", "classpath:sql/add_rounds.sql"})
+    @Test
+    public void shouldUpdateDbOnUpdateMatchUpdatedAtByRoundId() {
+        String roundId = matchRepository.findAll().stream()
+                .filter(m -> m.getCreatedAt().toString().equals("2016-06-22T19:10:20Z"))
+                .findFirst().get()
+                .getRounds().get(0).getId();
+
+        int result = matchRepository.updateMatchUpdatedAtByRoundId(roundId);
+
+        assertEquals(1, result);
+    }
+
     @Sql({"classpath:sql/add_users.sql", "classpath:sql/add_matches.sql"})
     @Test
     public void shouldReturnCorrectResultsOnFindByPlayerWithUserIdAndMatchStateIn() {
